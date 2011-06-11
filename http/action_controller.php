@@ -20,31 +20,36 @@ require_once HOPLITE_ROOT . '/http/action.php';
 require_once HOPLITE_ROOT . '/http/response_code.php';
 
 /*!
-  This abstract class is the base for handling all requests and filling out
-  response objects.
+  An ActionController is an Action that operates like a typical MVC Controller.
+  It will look at the Request's data for a key named 'action', which should
+  correspond to a method named 'Action$action'.
 */
-class RestAction extends Action
+class ActionController extends Action
 {
   /*!
-    Performs the action and fills out the response's data model.
+    Forwards the request/response pair to an internal method based on a key in
+    the Request object.
   */
   public function Invoke(Request $request, Response $response)
   {
-    $valid_methods = array('get', 'post', 'delete', 'put');
-    $method = strtolower($request->http_method);
-    if (!in_array($method, $valid_methods)) {
-      $response->http_code = ResponseCode::METHOD_NOT_ALLOWED;
+    $method = $this->_GetActionMethod($request);
+    if (!method_exists($this, $method)) {
+      $response->response_code = ResponseCode::NOT_FOUND;
       $this->controller()->Stop();
       return;
     }
 
-    $invoke = 'Do' . ucwords($method);
-    $this->$invoke();
+    $this->$method($request, $response);
   }
 
-  /*! Methods for each of the different HTTP methods. */
-  protected function _DoGet(Request $request, Response $response) {}
-  protected function _DoPost(Request $request, Response $response) {}
-  protected function _DoDelete(Request $request, Response $response) {}
-  protected function _DoPut(Request $request, Response $response) {}
+  /*!
+    Returns the method name to invoke based on the Request.
+    @return string|NULL
+  */
+  protected function _GetActionMethod(Request $request)
+  {
+    if (!isset($request->data['action']))
+      return NULL;
+    return 'Action' . $request->data['action'];
+  }
 }

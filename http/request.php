@@ -31,5 +31,5 @@ class Request extends \hoplite\base\StrictObject
   public $url = '';
 
   /*! @var array HTTP request data. */
-  public $data = NULL;
+  public $data = array();
 }
