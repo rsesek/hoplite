@@ -1,0 +1,160 @@
+hoplite					             A lightweight MVC framework
+================================================================================
+
+Hoplite is the successor framework to phalanx. While many of the ideas in
+phalanx were good starting point explorations, it was ultimately over-
+engineered. Hoplite aims to be a no-frills web framework--a starting point for
+applications that can incorporate other technologies.
+
+--------------------------------------------------------------------------------
+
+Basic flow:
+
+1. HTTP request is made.
+2. Web server (Apache, Lighty, etc.) receive the request and route it, via
+   mod_rewrite or something similar to the entrypoint, which is typically
+   index.php.
+3. RootController is initialized and Run with the $GLOBALS (_GET, _POST, etc.).
+4. A HttpRequest object is created with the initializing data.
+5. A UrlMap matches a URL prefix (with pathc component extraction) to an Action.
+6. The Action produces a HttpResponse to the Request.
+7. An OutputFilter examines the Request and Response to create the body of the
+   HTTP response.
+
+--------------------------------------------------------------------------------
+
+Actions:
+
+The base Action class is abstract and has three states: before, acting, and
+after:
+
+Action {
+  __construct(RootController)
+
+  controller() -> RootController
+
+  FilterRequest(HttpRequest, HttpResponse)
+
+  Invoke(HttpRequest, HttpResponse)
+
+  FilterResponse(HttpResponse, HttpResponse)
+}
+
+The filter methods are available for two reasons:
+  1. To validate data in the request
+  2. To format data in the response
+
+These hook points can also be used to implement interceptors, with the aid of
+the RootController interface.
+
+RootController {
+  __construct($GLOBALS)
+
+  Run()
+  Stop()
+
+  RouteRequest(string)
+  InvokeAction(Action)
+
+  LookupAction(string)
+}
+
+In the entrypoint, the RootController is Run(). This creates and owns the
+Request and Response objects. At any point when an Action is executing, it can
+invoke control-flow changing methods on the controller. Stop() will force the
+OutputFilter to run and will terminate the program. InvokeAction() will replace
+the current Action with the parameter. This will move the Action between its
+states.
+
+RouteRequest() is called by Run() to perform the evaluation and lookup of the
+UrlMap. This may also be called to perform an internal redirect. Note that this
+will reuse the existing Request and Response objects.
+
+Finally LookupAction() performs a reverse-lookup of class name to URL patterns.
+
+--------------------------------------------------------------------------------
+
+Advanced actions:
+
+The basic Action is abstract. For creating individual pages, this merely
+overriding Invoke() can be used to fill the HttpResponse's body for simple HTML
+output.
+
+RestActions are a special kind of action, where Invoke() will further dispatch
+the request based on the HTTP method. This makes creating RESTful web services
+and AJAX applications easy:
+
+RestAction : Action {
+  DoGet(HttpRequest, HttpResponse)
+  DoPost(...)
+  DoDelete(...)
+  DoPut(...)
+}
+
+Another type of action is an ActionController, which maps a URL path component
+to a method in the typical MVC style. The ActionController will look at the
+'action' key in the HttpRequest's data dictionary to determine which method to
+invoke. For example, if you had this entry in the UrlMap:
+
+  'user/{action}/{id}' => 'UserActionController'
+
+Then the UrlMap would extract the 'action' and 'id' paramters and add them to
+the HttpRequest object. If 'action' were 'view', then it would invoke
+ActionView().
+
+--------------------------------------------------------------------------------
+
+Output filtering:
+
+The last stage of the request pipeline is output filtering. At this stage, the
+HttpResponse is transformed into the body of the HTTP response.
+
+If the HttpRequest has the X-Requested-With header, for example, the output
+filter would know to respond with JSON. It could also look for other parameters
+in the request (like ?format=xml) to determine the response encoding.
+
+Template systems can hook in here, too. Actions can store arbitrary data in the
+HttpResponse, including the name of a template in which to render the response
+data. A simple templating system is included with Hoplite, but because the
+model is represented entirely within the HttpResponse, other templating systems
+can also be used freely.
+
+--------------------------------------------------------------------------------
+
+URL mapping:
+
+There are two ways to map URLs to Actions. The first is prefix matching, which
+assumes that all paths are relative to the URL of the RootController and do not
+need to start with a slash. In this form, any substrings within {curly braces}
+will be extracted as a variable by that name. The value will be placed in the
+HttpRequest's data dictionary.
+
+If the application were at:
+
+  https://example.com/webapp/index.php
+
+Requests will be in the rewritten form of:
+
+  https://example.comm/webapp/user/view/42
+
+The UrlMap would be any of the following:
+
+  ID paramter extracted manually from the URL or through GET or POST variables
+  'user/view'
+
+  Using path parameter extraction
+  'user/view/{id}'
+
+  Using an ActionController (see previous section)
+  'user/{action}'
+  'user/{action}/{id}'
+
+The second type of matching is done by regular expressions. These patterns both
+start and end with a slash. They are evaluated every time a request is routed
+and any pattern groups are saved in the url_pattern key of the HttpRequest data.
+
+For example, the following could be used to match the above routes:
+
+  '/user\/([a-z]+)(\/([0-9]*))?'
+
+
