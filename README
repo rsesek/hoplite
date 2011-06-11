@@ -155,4 +155,4 @@ and any pattern groups are saved in the url_pattern key of the HttpRequest data.
 
 For example, the following could be used to match the above routes:
 
-  '/user\/([a-z]+)(\/([0-9]*))?'
+  '/user\/([a-z]+)(\/([0-9]*))?/'
