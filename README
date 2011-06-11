@@ -1,4 +1,4 @@
-hoplite					             A lightweight MVC framework
+hoplite                                              A lightweight MVC framework
 ================================================================================
 
 Hoplite is the successor framework to phalanx. While many of the ideas in
@@ -156,5 +156,3 @@ and any pattern groups are saved in the url_pattern key of the HttpRequest data.
 For example, the following could be used to match the above routes:
 
   '/user\/([a-z]+)(\/([0-9]*))?'
-
-
