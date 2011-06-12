@@ -33,13 +33,13 @@ class RestAction extends Action
     $valid_methods = array('get', 'post', 'delete', 'put');
     $method = strtolower($request->http_method);
     if (!in_array($method, $valid_methods)) {
-      $response->http_code = ResponseCode::METHOD_NOT_ALLOWED;
+      $response->response_code = ResponseCode::METHOD_NOT_ALLOWED;
       $this->controller()->Stop();
       return;
     }
 
-    $invoke = 'Do' . ucwords($method);
-    $this->$invoke();
+    $invoke = '_Do' . ucwords($method);
+    $this->$invoke($request, $response);
   }
 
   /*! Methods for each of the different HTTP methods. */
