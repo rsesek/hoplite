@@ -16,8 +16,8 @@
 
 namespace hoplite\http;
 
-require_once HOPLITE_ROOT . 'base/strict_object.php';
-require_once HOPLITE_ROOT . 'http/response_code.php';
+require_once HOPLITE_ROOT . '/base/strict_object.php';
+require_once HOPLITE_ROOT . '/http/response_code.php';
 
 /*!
   A Response holds data processed by Action objects. When the RootController is

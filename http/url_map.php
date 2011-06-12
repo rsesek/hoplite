@@ -90,7 +90,7 @@ class UrlMap
 
     @return string|NULL A matched value in the ::map() or NULL if no match.
   */
-  public function Evaluate(Request $request)
+  public function Evaluate($request_url)
   {}
 
   /*! @brief Takes a value from the map and returns an Action object.

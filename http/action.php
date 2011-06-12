@@ -45,7 +45,7 @@ abstract class Action
   /*!
     Performs the action and fills out the response's data model.
   */
-  public function Invoke(Request $request, Response $response);
+  public abstract function Invoke(Request $request, Response $response);
 
   /*!
     Called after this has been Invoked().

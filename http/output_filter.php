@@ -16,7 +16,7 @@
 
 namespace hoplite\http;
 
-require_once HOPLITE_ROOT . 'http/response_code.php';
+require_once HOPLITE_ROOT . '/http/response_code.php';
 
 /*!
   The OutputFilter is executed after all Actions have been processed. The

@@ -23,7 +23,7 @@ namespace hoplite\http;
 */
 class ResponseCode
 {
-  const CONTINUE                         = 100;
+  const HTTP_CONTINUE                    = 100;  // CONTINUE is a keyword.
   const SWITCHING_PROTOCOLS              = 101;
   const OK                               = 200;
   const CREATED                          = 201;

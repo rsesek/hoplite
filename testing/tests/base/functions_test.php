@@ -15,7 +15,7 @@
 // this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace hoplite\test;
-use \hoplite\base as base;
+use hoplite\base as base;
 
 require_once HOPLITE_ROOT . '/base/functions.php';
 
