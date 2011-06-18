@@ -56,6 +56,11 @@ class UrlMap
       http://example.com/webapp/user/view/42
     And the http\Request's data will have a member called 'id' with value 42.
 
+    Typically prefix matching will be done for the above patterns. This may be
+    unwanted if a more general path needs to execute before a more descendent
+    one. Using strict matching, invoked by ending a pattern with two slashes,
+    pattern matching becomes exact in that all path components must match.
+
     Regular expression matching is not limited to prefix patterns and can match
     any part of the URL (though prefix matching can be enforced using the
     the standard regex '^' character). Regex patterns must begin and end with
@@ -91,7 +96,70 @@ class UrlMap
     @return string|NULL A matched value in the ::map() or NULL if no match.
   */
   public function Evaluate(Request $request)
-  {}
+  {
+    $fragments = explode('/', $request->url);
+    $path_length = strlen($request->url);
+
+    foreach ($this->map as $rule => $action) {
+      // Check if this is a regular expression rule and match it.
+      if ($rule[0] == '/' && substr($rule, -1) == '/') {
+        $matches = array();
+        if (preg_match($rule, $request->url, $matches)) {
+          // This pattern matched, so fill out the request and return.
+          $request->data['url_pattern'] = $matches;
+          return $action;
+        }
+      }
+      // Otherwise, this is just a normal string match.
+      else {
+        // Patterns that end with two slashes are exact.
+        $is_strict = substr($rule, -2) == '//';
+        if ($is_strict)
+          $rule = substr($rule, 0, -2);
+
+        // Set up some variables for the loop.
+        $is_match = TRUE;
+        $rule_fragments = explode('/', $rule);
+        $count_rule_fragments = count($rule_fragments);
+        $count_fragments = count($fragments);
+        $extractions = array();
+
+        // If this is a strict matcher, then do a quick test based on fragments.
+        if ($is_strict && $count_rule_fragments != $count_fragments)
+          continue;
+
+        // Loop over the pieces of the rule, matching the fragments to that of
+        // the request.
+        foreach ($rule_fragments as $i => $rule_frag) {
+          // Don't iterate past the length of the request. Prefix matching means
+          // that this can still be a match.
+          if ($i >= $count_fragments)
+            break;
+
+          // If this fragment is a key to be extracted, do so into a temporary
+          // array.
+          if ($rule_frag[0] == '{' && substr($rule_frag, -1) == '}') {
+            $key = substr($rule_frag, 1, -1);
+            $extractions[$key] = $fragments[$i];
+          }
+          // Otherwise, the path components mutch match.
+          else if ($rule_frag != $fragments[$i]) {
+            $is_match = FALSE;
+            break;
+          }
+        }
+
+        // If no match was made, try the next rule.
+        if (!$is_match)
+          continue;
+
+        // A match was made, so merge the path components that were extracted by
+        // key and return the match.
+        $request->data = array_merge($extractions, $request->data);
+        return $action;
+      }
+    }
+  }
 
   /*! @brief Takes a value from the map and returns an Action object.
     The values in the map are either an Action class name or a relative path to

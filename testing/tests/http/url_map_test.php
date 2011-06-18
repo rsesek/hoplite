@@ -71,7 +71,7 @@ class UrlMapTest extends \PHPUnit_Framework_TestCase
     $this->assertEquals('Second', $this->fixture->Evaluate($request));
 
     $request = new http\Request('some/action/third');
-    $this->assertNull($this->fixture->Evaluate($request));
+    $this->assertEquals('Second', $this->fixture->Evaluate($request));
   }
 
   public function testExtractSingle()
@@ -112,7 +112,7 @@ class UrlMapTest extends \PHPUnit_Framework_TestCase
       'action/two//' => 'Second',
       'action/two/alpha' => 'Third'
     );
-    $this->fixure->set_map($map);
+    $this->fixture->set_map($map);
 
     $request = new http\Request('action/one');
     $this->assertEquals('First', $this->fixture->Evaluate($request));
@@ -129,7 +129,7 @@ class UrlMapTest extends \PHPUnit_Framework_TestCase
     $map = array(
       'user/test' => 'First',
       '/user\/([a-z]+)(\/([0-9]+))?/' => 'Second',
-      'user/test2' => 'Third'
+      'user/TEST' => 'Third'
     );
     $this->fixture->set_map($map);
 
@@ -139,14 +139,14 @@ class UrlMapTest extends \PHPUnit_Framework_TestCase
     $request = new http\Request('user/add');
     $this->assertEquals('Second', $this->fixture->Evaluate($request));
     $this->assertEquals('add', $request->data['url_pattern'][1]);
-    $this->assertNull($request->data['url_pattern'][2]);
+    $this->assertTrue(!isset($request->data['url_pattern'][2]));
 
     $request = new http\Request('user/view/14');
     $this->assertEquals('Second', $this->fixture->Evaluate($request));
     $this->assertEquals('view', $request->data['url_pattern'][1]);
-    $this->assertEquals('14', $request->data['url_pattern'][2]);
+    $this->assertEquals('14', $request->data['url_pattern'][3]);
 
-    $request = new http\Request('user/test2');
+    $request = new http\Request('user/TEST');
     $this->assertEquals('Third', $this->fixture->Evaluate($request));
   }
 }
