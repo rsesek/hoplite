@@ -90,7 +90,7 @@ class RootController
     $this->request->http_method = $this->request->data['_SERVER']['REQUEST_METHOD'];
 
     // Dispatch the request to an Action.
-    $this->RouteRequest($url);
+    $this->RouteRequest($this->request);
 
     // When control returns here, all actions have been invoked and it's time
     // to start the output filter and exit.
@@ -118,11 +118,11 @@ class RootController
   /*!
     Invoked by Run() and can be invoked by others to evaluate and perform the
     lookup in the UrlMap. This then calls InvokeAction().
-    @param string The URL fragment to look up in the
+    @param Request The Request whose URL will be routed
   */
-  public function RouteRequest($url_fragment)
+  public function RouteRequest(Request $request)
   {
-    $url_map_value = $this->url_map->Evaluate($url_fragment);
+    $url_map_value = $this->url_map->Evaluate($request);
 
     $action = NULL;
     if ($url_map_value)

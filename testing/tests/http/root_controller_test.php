@@ -66,9 +66,11 @@ class RootControllerTest extends \PHPUnit_Framework_TestCase
     ));
     $mock = $this->ConfigureMock(array('RouteRequest', 'Stop'), $globals);
 
+    $mock->request()->url = 'some/action/42';
+
     $mock->expects($this->once())
          ->method('RouteRequest')
-         ->with($this->equalTo('some/action/42'));
+         ->with($this->equalTo($mock->request()));
 
     $mock->expects($this->once())
          ->method('Stop');
@@ -99,7 +101,7 @@ class RootControllerTest extends \PHPUnit_Framework_TestCase
     $globals = array();
     $mock = $this->ConfigureMock(array('Stop', 'InvokeAction'), $globals);
 
-    $fragment = 'some/action/42';
+    $mock->request()->url = 'some/action/42';
     $map_value = 'ActionReporter';
     $action = new ActionReporter($mock);
 
@@ -110,7 +112,7 @@ class RootControllerTest extends \PHPUnit_Framework_TestCase
     $url_map = $this->getMock('hoplite\http\UrlMap', array(), array($mock));
     $url_map->expects($this->once())
             ->method('Evaluate')
-            ->with($this->equalTo($fragment))
+            ->with($this->equalTo($mock->request()))
             ->will($this->returnValue($map_value));
     $url_map->expects($this->once())
             ->method('LookupAction')
@@ -118,7 +120,7 @@ class RootControllerTest extends \PHPUnit_Framework_TestCase
             ->will($this->returnValue($action));
 
     $mock->set_url_map($url_map);
-    $mock->RouteRequest($fragment);
+    $mock->RouteRequest($mock->request());
   }
 
   public function testRouteRequestInvalid()
@@ -126,7 +128,7 @@ class RootControllerTest extends \PHPUnit_Framework_TestCase
     $globals = array();
     $mock = $this->ConfigureMock(array('Stop'), $globals);
 
-    $fragment = 'another/action';
+    $mock->request()->url = 'another/action';
     
     $mock->expects($this->once())
          ->method('Stop');
@@ -134,10 +136,10 @@ class RootControllerTest extends \PHPUnit_Framework_TestCase
     $url_map = $this->getMock('hoplite\http\UrlMap', array(), array($mock));
     $url_map->expects($this->once())
             ->method('Evaluate')
-            ->with($this->equalTo($fragment));
+            ->with($this->equalTo($mock->request()));
 
     $mock->set_url_map($url_map);
-    $mock->RouteRequest($fragment);
+    $mock->RouteRequest($mock->request());
     $this->assertEquals(http\ResponseCode::NOT_FOUND, $mock->response()->response_code);
   }
 
