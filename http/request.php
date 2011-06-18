@@ -32,4 +32,12 @@ class Request extends \hoplite\base\StrictObject
 
   /*! @var array HTTP request data. */
   public $data = array();
+
+  /*!
+    Constructor. Takes an optional URL.
+  */
+  public function __construct($url = '')
+  {
+    $this->url = $url;
+  }
 }

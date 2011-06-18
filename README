@@ -137,7 +137,7 @@ Requests will be in the rewritten form of:
 
   https://example.comm/webapp/user/view/42
 
-The UrlMap would be any of the following:
+The UrlMap could be any of the following:
 
   ID paramter extracted manually from the URL or through GET or POST variables
   'user/view'
@@ -147,7 +147,21 @@ The UrlMap would be any of the following:
 
   Using an ActionController (see previous section)
   'user/{action}'
+  Or,
   'user/{action}/{id}'
+
+In the above forms, the matcher does prefix matching. Combined with the fact
+that rules are evaluated linearly, this can lead to a potentially unexpected
+result. When you have a more general rule before a specific one, the general
+will always be the one matched. For example:
+
+  'document/edit'
+  'document/edit/{id}'
+
+The second rule will never be matched, because the evaluator will find and
+invoke the first rule and then stop. This isn't always the desired behavior and
+can be altered by adding two slashes to the end of a rule. These two slashes
+make the parser matching strict equality, rather than prefix.
 
 The second type of matching is done by regular expressions. These patterns both
 start and end with a slash. They are evaluated every time a request is routed
