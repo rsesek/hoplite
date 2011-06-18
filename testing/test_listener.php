@@ -174,7 +174,7 @@ class TestListener extends \PHPUnit_Util_Printer implements \PHPUnit_Framework_T
         $name = $test->ToString();
         if (in_array($name, $this->skipped) || in_array($name, $this->incomplete)) {
             $this->_Print('[    ABORT ]', $name . ' (' . $this->_Round($time) . ' ms)', self::COLOR_CYAN);
-        } else {   
+        } else if (!in_array($name, $this->failing)) {
             $this->_Print('[       OK ]', $name . ' (' . $this->_Round($time) . ' ms)', self::COLOR_GREEN);
         }
     }
