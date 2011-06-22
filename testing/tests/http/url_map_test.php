@@ -149,4 +149,19 @@ class UrlMapTest extends \PHPUnit_Framework_TestCase
     $request = new http\Request('user/TEST');
     $this->assertEquals('Third', $this->fixture->Evaluate($request));
   }
+
+  public function testLookupActionClass()
+  {
+    $test_class = '\hoplite\test\TestAction';
+    $this->assertEquals($test_class, $this->fixture->LookupAction($test_class));
+
+    $test_class = 'TestAction';
+    $this->assertEquals($test_class, $this->fixture->LookupAction($test_class));
+  }
+
+  public function testLookupActionFile()
+  {
+    $this->assertEquals('TestAction', $this->fixture->LookupAction('actions/test_action'));
+    $this->assertEquals('TestAction', $this->fixture->LookupAction('actions/test_action.php'));
+  }
 }

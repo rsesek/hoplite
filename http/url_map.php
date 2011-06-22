@@ -16,6 +16,8 @@
 
 namespace hoplite\http;
 
+require_once HOPLITE_ROOT . '/base/functions.php';
+
 /*!
   A UrlMap will translate a raw HTTP request into a http\Request object. It does
   so by matching the incoming URL to a pattern. For information on the format of
@@ -175,7 +177,23 @@ class UrlMap
     @return Action|NULL The loaded action, or NULL on error.
   */
   public function LookupAction($map_value)
-  {}
+  {
+    // If the first character is uppercase or a namespaced class, simply return
+    // the value.
+    $first_char = $map_value[0];
+    if ($first_char == '\\' || ctype_upper($first_char))
+      return $map_value;
+
+    // Otherwise this is a path. Check if an extension is present, and if not,
+    // add one.
+    $pathinfo = pathinfo($map_value);
+    if (!isset($pathinfo['extension'])) {
+      $map_value .= '.php';
+      $pathinfo['extension'] = 'php';
+    }
+
+    return $this->_ClassNameFromFileName($pathinfo);
+  }
 
   /*!
     Takes a file name and returns the name of an Action class. This uses an
@@ -184,8 +202,13 @@ class UrlMap
 
     This can be overridden to provide a custom transformation.
 
+    @param array Result of a pathinfo() call
+
     @return string Action class name.
   */
-  protected function _ClassNameFromFileName($file_name)
-  {}
+  protected function _ClassNameFromFileName($pathinfo)
+  {
+    $filename = $pathinfo['filename'];
+    return \hoplite\base\UnderscoreToCamelCase($filename);
+  }
 }
