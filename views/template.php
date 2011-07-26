@@ -119,7 +119,7 @@ class Template
     $i = 0;  // The current position of the iterator.
     $looking_for_end = FALSE;  // Whehter or not an end tag is expected.
     $line_number = 1;  // The current line number.
-    $column_number = 0;  // The current column number.
+    $i_last_line = 0;  // The value of |i| at the previous new line, used for column numbering.
 
     while ($i < $length) {
       // See how far the current position is from the end of the string.
@@ -128,14 +128,16 @@ class Template
       // When a new line is reached, update the counters.
       if ($data[$i] == "\n") {
         ++$line_number;
-        $column_number = 0;
+        $i_last_line = $i;
       }
 
       // Check for simple PHP short-tag expansion.
       if ($delta >= 3 && substr($data, $i, 3) == '{!%') {
         // If an expansion has already been opened, then it's an error to nest.
-        if ($looking_for_end)
-          throw new TemplateException("Unexpected start of expansion at line $line_number:$column_number");
+        if ($looking_for_end) {
+          $column = $i - $i_last_line;
+          throw new TemplateException("Unexpected start of expansion at line $line_number:$column");
+        }
 
         $looking_for_end = TRUE;
         $processed .= '<' . '?php';
@@ -148,8 +150,10 @@ class Template
         // Check for an end tag.
         if ($substr == '%}') {
           // If an end tag was encountered without an open tag, that's an error.
-          if (!$looking_for_end)
-            throw new TemplateException("Unexpected end of expansion at line $line_number:$column_number");
+          if (!$looking_for_end) {
+            $column = $i - $i_last_line;
+            throw new TemplateException("Unexpected end of expansion at line $line_number:$column");
+          }
 
           // If this is a macro, it's time to process it.
           if ($in_macro)
@@ -163,6 +167,12 @@ class Template
         }
         // Check for the beginning of a macro.
         else if ($substr == '{%') {
+          // If an expansion has already been opened, then it's an error to nest.
+          if ($looking_for_end) {
+            $column = $i - $i_last_line;
+            throw new TemplateException("Unexpected start of expansion at line $line_number:$column");
+          }
+
           $processed .= '<' . '?php echo ';
           $macro = '';
           $in_macro = TRUE;
