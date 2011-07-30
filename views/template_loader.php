@@ -109,7 +109,7 @@ class TemplateLoader
     if ($data === FALSE)
       return NULL;
 
-    return Template::NewWithData($data);
+    return Template::NewWithCompiledData($data);
   }
 
   /*!
@@ -129,7 +129,7 @@ class TemplateLoader
     if ($data === FALSE)
       throw new TemplateLoaderException('Could not load template ' . $this->template_name);
 
-    $template = Template::NewWithCompiledData($data);
+    $template = Template::NewWithData($data);
 
     // Cache the file.
     if (!file_put_contents($cache_path, $this->cache_prefix . $template->template()))
