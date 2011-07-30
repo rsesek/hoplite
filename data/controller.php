@@ -42,7 +42,7 @@ class Controller extends http\RestAction
   }
 
   /*! Gets the data from the model. */
-  protected function _DoGet(http\Request $request, http\Response $response)
+  public function DoGet(http\Request $request, http\Response $response)
   {
     $this->model->SetFrom($request->data);
     try {
@@ -54,7 +54,7 @@ class Controller extends http\RestAction
   }
 
   /*! Updates an object in the store. */
-  protected function _DoPost(http\Request $request, http\Response $response)
+  public function DoPost(http\Request $request, http\Response $response)
   {
     $this->model->SetFrom($request->data);
     try {
@@ -67,7 +67,7 @@ class Controller extends http\RestAction
   }
 
   /*! Deletes the object from the store. */
-  protected function _DoDelete(http\Request $request, http\Response $response)
+  public function DoDelete(http\Request $request, http\Response $response)
   {
     $this->model->SetFrom($request->data);
     try {
@@ -79,7 +79,7 @@ class Controller extends http\RestAction
   }
 
   /*! Updates an object in the store. */
-  protected function _DoPut(http\Request $request, http\Response $response)
+  public function DoPut(http\Request $request, http\Response $response)
   {
     $this->model->SetFrom($request->data);
     try {

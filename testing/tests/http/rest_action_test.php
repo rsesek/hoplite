@@ -27,22 +27,22 @@ class TestRestAction extends http\RestAction
   public $did_delete = FALSE;
   public $did_put = FALSE;
 
-  protected function _DoGet(http\Request $request, http\Response $response)
+  public function DoGet(http\Request $request, http\Response $response)
   {
     parent::_DoGet($request, $response);
     $this->did_get = TRUE;
   }
-  protected function _DoPost(http\Request $request, http\Response $response)
+  public function DoPost(http\Request $request, http\Response $response)
   {
     parent::_DoPost($request, $response);
     $this->did_post = TRUE;
   }
-  protected function _DoDelete(http\Request $request, http\Response $response)
+  public function DoDelete(http\Request $request, http\Response $response)
   {
     parent::_DoDelete($request, $response);
     $this->did_delete = TRUE;
   }
-  protected function _DoPut(http\Request $request, http\Response $response)
+  public function DoPut(http\Request $request, http\Response $response)
   {
     parent::_DoPut($request, $response);
     $this->did_put = TRUE;

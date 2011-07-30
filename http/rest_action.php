@@ -38,13 +38,13 @@ class RestAction extends Action
       return;
     }
 
-    $invoke = '_Do' . ucwords($method);
+    $invoke = 'Do' . ucwords($method);
     $this->$invoke($request, $response);
   }
 
   /*! Methods for each of the different HTTP methods. */
-  protected function _DoGet(Request $request, Response $response) {}
-  protected function _DoPost(Request $request, Response $response) {}
-  protected function _DoDelete(Request $request, Response $response) {}
-  protected function _DoPut(Request $request, Response $response) {}
+  public function DoGet(Request $request, Response $response) {}
+  public function DoPost(Request $request, Response $response) {}
+  public function DoDelete(Request $request, Response $response) {}
+  public function DoPut(Request $request, Response $response) {}
 }
