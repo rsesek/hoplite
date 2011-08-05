@@ -39,7 +39,7 @@ abstract class RestAdapter extends ActionController
 
   public function ActionFetch(Request $request, Response $response)
   {
-    if ($request->http_method != 'GET' || $request->http_method != 'POST') {
+    if ($request->http_method != 'GET' && $request->http_method != 'POST') {
       $response->response_code = ResponseCode::METHOD_NOT_ALLOWED;
       return;
     }

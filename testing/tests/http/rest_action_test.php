@@ -19,35 +19,7 @@ use hoplite\http as http;
 
 require_once HOPLITE_ROOT . '/http/rest_action.php';
 require_once HOPLITE_ROOT . '/http/root_controller.php';
-
-class TestRestAction extends http\RestAction
-{
-  public $did_get = FALSE;
-  public $did_post = FALSE;
-  public $did_delete = FALSE;
-  public $did_put = FALSE;
-
-  public function DoGet(http\Request $request, http\Response $response)
-  {
-    parent::DoGet($request, $response);
-    $this->did_get = TRUE;
-  }
-  public function DoPost(http\Request $request, http\Response $response)
-  {
-    parent::DoPost($request, $response);
-    $this->did_post = TRUE;
-  }
-  public function DoDelete(http\Request $request, http\Response $response)
-  {
-    parent::DoDelete($request, $response);
-    $this->did_delete = TRUE;
-  }
-  public function DoPut(http\Request $request, http\Response $response)
-  {
-    parent::DoPut($request, $response);
-    $this->did_put = TRUE;
-  }
-}
+require_once TEST_ROOT . '/tests/http/fixtures.php';
 
 class RestActionTest extends \PHPUnit_Framework_TestCase
 {
