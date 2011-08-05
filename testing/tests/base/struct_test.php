@@ -17,7 +17,7 @@
 namespace hoplite\test;
 use \hoplite\base as base;
 
-require_once TEST_ROOT . '/tests/base.php';
+require_once HOPLITE_ROOT . '/base/struct.php';
 
 class TestStruct extends base\Struct
 {

@@ -29,22 +29,22 @@ class TestRestAction extends http\RestAction
 
   public function DoGet(http\Request $request, http\Response $response)
   {
-    parent::_DoGet($request, $response);
+    parent::DoGet($request, $response);
     $this->did_get = TRUE;
   }
   public function DoPost(http\Request $request, http\Response $response)
   {
-    parent::_DoPost($request, $response);
+    parent::DoPost($request, $response);
     $this->did_post = TRUE;
   }
   public function DoDelete(http\Request $request, http\Response $response)
   {
-    parent::_DoDelete($request, $response);
+    parent::DoDelete($request, $response);
     $this->did_delete = TRUE;
   }
   public function DoPut(http\Request $request, http\Response $response)
   {
-    parent::_DoPut($request, $response);
+    parent::DoPut($request, $response);
     $this->did_put = TRUE;
   }
 }
