@@ -34,6 +34,9 @@ class WeakInterface
   /*! @var object The object to which this interface is bound. */
   private $object = NULL;
 
+  /*! @var ReflectionClass The reflector of #object. */
+  private $object_reflector = NULL;
+
   /*! @var bool Whether or not a NULL object will throw when called. */
   private $null_allowed = FALSE;
 
@@ -65,6 +68,7 @@ class WeakInterface
   {
     $this->_CheckObject($object);
     $this->object = $object;
+    $this->object_reflector = new \ReflectionClass($this->object);
   }
 
   /*! Magic method that performs the actual method invocation. */
@@ -77,7 +81,7 @@ class WeakInterface
         return;
     }
 
-    return $this->imps[$meth]->Invoke($args);
+    return $this->imps[$meth]->Invoke($this->object_reflector, $args);
   }
 
   /*! Ensures that the bound object properly implements the interface. */
@@ -125,9 +129,8 @@ class MethodImp
   }
 
   /*! Forwards a method call. */
-  public function Invoke($args)
+  public function Invoke($reflector, $args)
   {
-    $reflector = new \ReflectionClass($this->interface->get());
     try {
       $impl = $reflector->GetMethod($this->method->name);
     } catch (\ReflectionException $e) {
