@@ -23,11 +23,7 @@ class TemplateTest extends \PHPUnit_Framework_TestCase
 {
   private function _Render($template)
   {
-    ob_start();
-    $template->Render();
-    $data = ob_get_contents();
-    ob_end_clean();
-    return $data;
+    return $template->Render();
   }
 
   public function testRenderSimple()

@@ -83,7 +83,12 @@ class Template
       extract($_vars);
       eval('?>' . $_template . '<' . '?');
     };
+
+    ob_start();
     $render();
+    $data = ob_get_contents();
+    ob_end_clean();
+    return $data;
   }
 
   /*! @brief Does any pre-processing on the template.
