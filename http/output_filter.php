@@ -57,13 +57,11 @@ class OutputFilter
       if (!$this->_ContinueHandlingResponseForCode($request, $response))
         return;
 
-    // If there's already raw data for the body, just output that.
-    if ($response->body)
-      return;
-
-    // Otherwise, construct the body based on how the Request was received and
-    // any other information in the response.
-    $this->_CreateBodyForResponse($request, $response);
+    // If there's already raw data for the body, just output that. Otherwise,
+    // construct the body based on how the Request was received and any other
+    //  information in the response.
+    if (!$response->body)
+      $this->_CreateBodyForResponse($request, $response);
 
     // Now just output the response.
     header("Status: {$response->response_code}", true, $response->response_code);
