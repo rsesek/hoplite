@@ -66,6 +66,7 @@ class OutputFilter
     $this->_CreateBodyForResponse($request, $response);
 
     // Now just output the response.
+    header("Status: {$response->response_code}", true, $response->response_code);
     foreach ($response->headers as $header => $value)
       header("$header: $value");
     print $response->body;

@@ -67,7 +67,7 @@ class RootController
   public function response() { return $this->response; }
 
   /*! Sets the UrlMap. */
-  public function set_urL_map(UrlMap $url_map) { $this->url_map = $url_map; }
+  public function set_url_map(UrlMap $url_map) { $this->url_map = $url_map; }
 
   /*! Sest the Output Filter. */
   public function set_output_filter(OutputFilter $output_filter)
