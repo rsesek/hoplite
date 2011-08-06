@@ -103,6 +103,14 @@ class UrlMap
     $path_length = strlen($request->url);
 
     foreach ($this->map as $rule => $action) {
+      // First check if this is the empty rule.
+      if (empty($rule)) {
+        if (empty($request->url))
+          return $action;
+        else
+          continue;
+      }
+
       // Check if this is a regular expression rule and match it.
       if ($rule[0] == '/' && substr($rule, -1) == '/') {
         $matches = array();

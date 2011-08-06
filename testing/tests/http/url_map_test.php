@@ -74,6 +74,25 @@ class UrlMapTest extends \PHPUnit_Framework_TestCase
     $this->assertEquals('Second', $this->fixture->Evaluate($request));
   }
 
+  public function testEmptyRule()
+  {
+    $map = array(
+      'some/first' => 'First',
+      '' => 'Index',
+      'some/second' => 'Second'
+    );
+    $this->fixture->set_map($map);
+
+    $request = new http\Request('some/first');
+    $this->assertEquals('First', $this->fixture->Evaluate($request));
+
+    $request = new http\Request('');
+    $this->assertEquals('Index', $this->fixture->Evaluate($request));
+
+    $request = new http\Request('some/second');
+    $this->assertEquals('Second', $this->fixture->Evaluate($request));
+  }
+
   public function testExtractSingle()
   {
     $map = array(
