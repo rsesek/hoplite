@@ -16,6 +16,7 @@
 
 namespace hoplite\http;
 
+require_once HOPLITE_ROOT . '/base/weak_interface.php';
 require_once HOPLITE_ROOT . '/http/request.php';
 require_once HOPLITE_ROOT . '/http/response.php';
 require_once HOPLITE_ROOT . '/http/response_code.php';
@@ -38,6 +39,9 @@ class RootController
   /*! @var OutputFilter */
   private $output_filter = NULL;
 
+  /*! @var WeakInterface<RootControllerDelegate> */
+  private $delegate = NULL;
+
   /*!
     Creates the controller with the request context information, typicallhy
     from the global scope ($GLOBALS), but can be injected for testing.
@@ -55,6 +59,7 @@ class RootController
       '_COOKIE' => &$globals['_COOKIE'],
       '_SERVER' => &$globals['_SERVER']
     );
+    $this->delegate = new \hoplite\base\WeakInterface('hoplite\http\RootControllerDelegate');
   }
 
   /*! Accessors */
@@ -68,6 +73,12 @@ class RootController
   public function set_output_filter(OutputFilter $output_filter)
   {
     $this->output_filter = $output_filter;
+  }
+
+  /*! Sets the delegate. */
+  public function set_delegate($delegate)
+  {
+    $this->delegate->Bind($delegate);
   }
 
   /*!
@@ -89,6 +100,8 @@ class RootController
     $this->request->url = $url;
     $this->request->http_method = $this->request->data['_SERVER']['REQUEST_METHOD'];
 
+    $this->delegate->OnInitialRequest($this->request);
+
     // Dispatch the request to an Action.
     $this->RouteRequest($this->request);
 
@@ -103,6 +116,7 @@ class RootController
   */
   public function Stop()
   {
+    $this->delegate->WillStop($this->request, $this->response);
     $this->output_filter->FilterOutput($this->request, $this->response);
     $this->_Exit();
   }
@@ -122,6 +136,8 @@ class RootController
   */
   public function RouteRequest(Request $request)
   {
+    $this->delegate->WillRouteRequest($request, $this->response);
+
     $url_map_value = $this->url_map->Evaluate($request);
 
     $action = NULL;
@@ -143,9 +159,13 @@ class RootController
   */
   public function InvokeAction(Action $action)
   {
+    $this->delegate->WillInvokeAction($action, $this->request, $this->response);
+
     $action->FilterRequest($this->request, $this->response);
     $action->Invoke($this->request, $this->response);
     $action->FilterResponse($this->request, $this->response);
+
+    $this->delegate->DidInvokeAction($action, $this->request, $this->response);
   }
 
   /*!
@@ -161,4 +181,21 @@ class RootController
         return $pattern;
     }
   }
+}
+
+/*!
+  Delegate for the root controller. The controller uses WeakInterface to call
+  these methods, so they're all optional.
+*/
+interface RootControllerDelegate
+{
+  public function OnInitialRequest(Request $request);
+
+  public function WillRouteRequest(Request $request, Response $response);
+
+  public function WillInvokeAction(Action $action, Request $request, Response $response);
+
+  public function DidInvokeAction(Action $action, Request $request, Response $response);
+
+  public function WillStop(Request $request, Response $response);
 }
