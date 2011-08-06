@@ -95,10 +95,12 @@ class OutputFilter
     $type = NULL;
 
     // See if the HTTP request contains the desired output format.
-    if ($request->data['format'] == 'xml')
-      $type = 'xml';
-    else if ($request->data['format'] == 'json')
-      $type = 'json';
+    if (isset($request->data['format'])) {
+      if ($request->data['format'] == 'xml')
+        $type = 'xml';
+      else if ($request->data['format'] == 'json')
+        $type = 'json';
+    }
 
     // If the request didn't specify a type, try and figure it out using
     // heuristics.
