@@ -29,6 +29,11 @@ class OutputFilter
   /*! @var RootController */
   private $controller;
 
+  /*! @const The key in Response#context that indicates which type of output to
+             produce, regardless of the request type.
+  */
+  const RESPONSE_TYPE = 'response_type';
+
   /*!
     Constructor that takes a reference to the RootController.
   */
@@ -59,6 +64,11 @@ class OutputFilter
     // Otherwise, construct the body based on how the Request was received and
     // any other information in the response.
     $this->_CreateBodyForResponse($request, $response);
+
+    // Now just output the response.
+    foreach ($response->headers as $header => $value)
+      header("$header: $value");
+    print $response->body;
   }
 
   /*!
@@ -80,7 +90,40 @@ class OutputFilter
   */
   protected function _CreateBodyForResponse(Request $request,
                                             Response $response)
-  {}
+  {
+    $type = NULL;
+
+    // See if the HTTP request contains the desired output format.
+    if ($request->data['format'] == 'xml')
+      $type = 'xml';
+    else if ($request->data['format'] == 'json')
+      $type = 'json';
+
+    // If the request didn't specify a type, try and figure it out using
+    // heuristics.
+
+    // If this was from an XHR, assume JSON.
+    if (!$type && isset($request->data['_SERVER']['X_REQUESTED_WITH']))
+      $type = 'json';
+
+    // Check if an Action specified an overriding response type.
+    if (isset($response->context[self::RESPONSE_TYPE]))
+      $type = $response->context[self::RESPONSE_TYPE];
+
+    // If no type has been determined, just assume HTML.
+    if (!$type)
+      $type = 'html';
+
+    if ($type == 'json') {
+      $response->headers['Content-Type'] = 'application/json';
+      $response->body = json_encode($response->data);
+    } else if ($type == 'xml') {
+      $response->headers['Content-Type'] = 'application/xml';
+      $response->body = $this->_EncodeXML($response->data);
+    } else if ($type == 'html') {
+      $response->headers['Content-Type'] = 'text/html';
+    }
+  }
 
   /*!
     Creates an XML tree from an array. Equivalent to json_encode.
