@@ -88,15 +88,15 @@ class WeakInterfaceTest extends \PHPUnit_Framework_TestCase
 
   public function testNull()
   {
-    $this->setExpectedException('hoplite\base\WeakInterfaceException');
     $delegate = new base\WeakInterface('hoplite\test\AllOptional');
     $delegate->DoSomething();
   }
 
   public function testNullAllowed()
   {
+    $this->setExpectedException('hoplite\base\WeakInterfaceException');
     $delegate = new base\WeakInterface('hoplite\test\AllOptional');
-    $delegate->set_null_allowed(TRUE);
+    $delegate->set_null_allowed(FALSE);
     $delegate->DoSomething();
   }
 
@@ -122,6 +122,5 @@ class WeakInterfaceTest extends \PHPUnit_Framework_TestCase
     $imp->DoSomething();
     $mt_e = microtime(TRUE);
     print 'Straight Call: ' . ($mt_e - $mt_s) . 'µs' . "\n";
-    
   }
 }

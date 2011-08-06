@@ -38,7 +38,7 @@ class WeakInterface
   private $object_reflector = NULL;
 
   /*! @var bool Whether or not a NULL object will throw when called. */
-  private $null_allowed = FALSE;
+  private $null_allowed = TRUE;
 
   /*! Creates a weak interface with the name of an actual interface. */
   public function __construct($interface)
