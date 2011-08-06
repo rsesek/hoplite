@@ -31,6 +31,9 @@ class UrlMap
   /*! @var array The map of URLs to actions. */
   private $map = array();
 
+  /*! @var Closure(string) Loads the file for the appropriate action class name. */
+  private $file_loader = NULL;
+
   /*!
     Constructs the object with a reference to the RootController.
     @param RootController
@@ -79,6 +82,15 @@ class UrlMap
     @see ::LookupAction()
   */
   public function set_map(array $map) { $this->map = $map; }
+
+  /*! @brief The file loading helper function.
+    This function is called in ::LookupAction() and will load the necessary file
+    for this class so that it can be instantiated. Should return the class name
+    to instantiate. This can either be the first argument passed to it
+    unaltered, or modified for example with a namespace.
+    Closure(string $class_name, string $map_value) -> string $new_class_name
+  */
+  public function set_file_loader(\Closure $fn) { $this->file_loader = $fn; }
 
   /*! @brief Evalutes the URL map and finds a match.
     This will take the incoming URL from the request and will match it against
@@ -189,18 +201,26 @@ class UrlMap
     // If the first character is uppercase or a namespaced class, simply return
     // the value.
     $first_char = $map_value[0];
-    if ($first_char == '\\' || ctype_upper($first_char))
-      return $map_value;
+    if ($first_char == '\\' || ctype_upper($first_char)) {
+      $class = $map_value;
+    } else {
+      // Otherwise this is a path. Check if an extension is present, and if not,
+      // add one.
+      $pathinfo = pathinfo($map_value);
+      if (!isset($pathinfo['extension'])) {
+        $map_value .= '.php';
+        $pathinfo['extension'] = 'php';
+      }
 
-    // Otherwise this is a path. Check if an extension is present, and if not,
-    // add one.
-    $pathinfo = pathinfo($map_value);
-    if (!isset($pathinfo['extension'])) {
-      $map_value .= '.php';
-      $pathinfo['extension'] = 'php';
+      $class = $this->_ClassNameFromFileName($pathinfo);
     }
 
-    return $this->_ClassNameFromFileName($pathinfo);
+    if ($this->file_loader) {
+      $loader = $this->file_loader;
+      $class = $loader($class, $map_value);
+    }
+
+    return new $class($this->controller());
   }
 
   /*!

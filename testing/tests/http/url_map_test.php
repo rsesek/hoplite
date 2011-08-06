@@ -19,6 +19,11 @@ use hoplite\http as http;
 
 require_once HOPLITE_ROOT . '/http/url_map.php';
 
+class TestAction extends http\Action
+{
+  public function Invoke(http\Request $request, http\Response $response) {}
+}
+
 class UrlMapTest extends \PHPUnit_Framework_TestCase
 {
   public function setUp()
@@ -171,16 +176,41 @@ class UrlMapTest extends \PHPUnit_Framework_TestCase
 
   public function testLookupActionClass()
   {
-    $test_class = '\hoplite\test\TestAction';
-    $this->assertEquals($test_class, $this->fixture->LookupAction($test_class));
+    $self = $this;
 
+    $this->fixture->set_file_loader(function ($name, $value) use ($self) {
+      $self->assertEquals('\hoplite\test\TestAction', $name);
+      $self->assertEquals('\hoplite\test\TestAction', $value);
+      return 'hoplite\test\TestAction';
+    });
+    $test_class = '\hoplite\test\TestAction';
+    $this->assertInstanceOf('hoplite\test\TestAction', $this->fixture->LookupAction($test_class));
+
+    $this->fixture->set_file_loader(function ($name, $value) use ($self) {
+      $self->assertEquals('TestAction', $name);
+      $self->assertEquals('TestAction', $value);
+      return 'hoplite\test\TestAction';
+    });
     $test_class = 'TestAction';
-    $this->assertEquals($test_class, $this->fixture->LookupAction($test_class));
+    $this->assertInstanceOf('hoplite\test\TestAction', $this->fixture->LookupAction($test_class));
   }
 
   public function testLookupActionFile()
   {
-    $this->assertEquals('TestAction', $this->fixture->LookupAction('actions/test_action'));
-    $this->assertEquals('TestAction', $this->fixture->LookupAction('actions/test_action.php'));
+    $self = $this;
+
+    $this->fixture->set_file_loader(function ($name, $value) use ($self) {
+      $self->assertEquals('TestAction', $name);
+      $self->assertEquals('actions/test_action.php', $value);
+      return 'hoplite\test\TestAction';
+    });
+    $this->assertInstanceOf('hoplite\test\TestAction', $this->fixture->LookupAction('actions/test_action'));
+
+    $this->fixture->set_file_loader(function ($name, $value) use ($self) {
+      $self->assertEquals('TestAction', $name);
+      $self->assertEquals('actions/test_action.php', $value);
+      return 'hoplite\test\TestAction';
+    });
+    $this->assertInstanceOf('hoplite\test\TestAction', $this->fixture->LookupAction('actions/test_action.php'));
   }
 }
