@@ -121,11 +121,15 @@ class MethodImp
   /*! @var ReflectionMethod The method of the actual interface that this is implementing. */
   private $method = NULL;
 
+  /*! @var bool Whether or not this is required. */
+  private $required = FALSE;
+
   public function __construct(\hoplite\base\WeakInterface $interface,
                               \ReflectionMethod $method)
   {
     $this->interface = $interface;
     $this->method = $method;
+    $this->required = strpos($this->method->GetDocComment(), '@required') !== FALSE;
   }
 
   /*! Forwards a method call. */
@@ -134,7 +138,7 @@ class MethodImp
     try {
       $impl = $reflector->GetMethod($this->method->name);
     } catch (\ReflectionException $e) {
-      if ($this->IsRequired())
+      if ($this->required)
         throw $e;
       return;
     }
@@ -150,7 +154,7 @@ class MethodImp
   /*! Checks if a method is marked as required. */
   public function IsRequired()
   {
-    return strpos($this->method->GetDocComment(), '@required') !== FALSE;
+    return $this->required;
   }
 }
 
