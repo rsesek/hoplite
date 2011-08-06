@@ -154,5 +154,11 @@ class RootController
     @param string Class name.
   */
   public function LookupAction($class)
-  {}
+  {
+    $map = $this->url_map->map();
+    foreach ($map as $pattern => $action) {
+      if ($action == $class)
+        return $pattern;
+    }
+  }
 }
