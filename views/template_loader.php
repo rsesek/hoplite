@@ -51,7 +51,7 @@ class TemplateLoader
       $class = get_called_class();
       self::$instance = new $class();
     }
-    return self::$instance();
+    return self::$instance;
   }
   /*! Sets the singleton instance. */
   static public function SetInstance($instance) { self::$instance = $instance; }
@@ -88,6 +88,12 @@ class TemplateLoader
     $template = $this->_Cache($name);
     $this->cache[$name] = $template;
     return clone $template;
+  }
+
+  /*! Convenience function for loading templates. */
+  static public function Fetch($name)
+  {
+    return self::GetInstance()->Load($name);
   }
 
   /*!
@@ -129,7 +135,7 @@ class TemplateLoader
 
     $data = @file_get_contents($tpl_path);
     if ($data === FALSE)
-      throw new TemplateLoaderException('Could not load template ' . $this->template_name);
+      throw new TemplateLoaderException('Could not load template ' . $name);
 
     $template = Template::NewWithData($data);
 

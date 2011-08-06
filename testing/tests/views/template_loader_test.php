@@ -47,8 +47,8 @@ class TemplateLoaderTest extends \PHPUnit_Framework_TestCase
 
   protected function _SetUpPaths()
   {
-    $this->fixture->set_template_path(dirname(__FILE__) . '/');
-    $this->fixture->set_cache_path($this->fixture->template_path() . 'cache/');
+    $this->fixture->set_template_path(dirname(__FILE__) . '/%s.tpl');
+    $this->fixture->set_cache_path(dirname(__FILE__) . '/cache/');
   }
 
   public function testTemplatePath()
@@ -134,5 +134,18 @@ class TemplateLoaderTest extends \PHPUnit_Framework_TestCase
     $expected = file_get_contents(sprintf($this->fixture->template_path(), 'cache_test'));
     $actual   = file_get_contents($this->fixture->cache_path() . '/cache_test.phpi');
     $this->assertEquals($expected, $actual);
+  }
+
+  public function testSingleton()
+  {
+    $fixture = views\TemplateLoader::GetInstance();
+    $this->assertNotSame($fixture, $this->fixture);
+
+    views\TemplateLoader::SetInstance($this->fixture);
+    $this->assertSame(views\TemplateLoader::GetInstance(), $this->fixture);
+
+    $this->_SetUpPaths();
+    $template = views\TemplateLoader::Fetch('cache_test');
+    $this->assertEquals('This file should be cached.', $template->template());
   }
 }
