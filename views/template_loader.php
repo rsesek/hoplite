@@ -47,19 +47,21 @@ class TemplateLoader
   /*! Gets the singleton instance. */
   static public function GetInstance()
   {
-    if (!self::$instance)
-      self::$instance = new __class__();
+    if (!self::$instance) {
+      $class = get_called_class();
+      self::$instance = new $class();
+    }
     return self::$instance();
   }
   /*! Sets the singleton instance. */
   static public function SetInstance($instance) { self::$instance = $instance; }
 
   /*! Accessors */
-  public function set_template_path($path) { $this->$template_path = $path; }
-  function template_path() { return $this->$template_path; }
+  public function set_template_path($path) { $this->template_path = $path; }
+  function template_path() { return $this->template_path; }
   
-  public function set_cache_path($path) { $this->$cache_path = $path; }
-  public function cache_path() { return $this->$cache_path; }
+  public function set_cache_path($path) { $this->cache_path = $path; }
+  public function cache_path() { return $this->cache_path; }
 
   /*!
     Loads a template from a file, creates a Template object, and returns a copy
@@ -101,7 +103,7 @@ class TemplateLoader
     $tpl_path   = $this->_TemplatePath($name);
 
     // Make sure the cached file exists and hasn't gotten out-of-date.
-    if (!file_exists($cache_path) || filemtime($cache_path) < filemtime($tpl_path)) {
+    if (!file_exists($cache_path) || filemtime($cache_path) < filemtime($tpl_path))
       return NULL;
 
     // Load the contents of the cache.
@@ -132,8 +134,10 @@ class TemplateLoader
     $template = Template::NewWithData($data);
 
     // Cache the file.
-    if (!file_put_contents($cache_path, $this->cache_prefix . $template->template()))
-      throw new TemplateLoaderException('Could not cache ' . $this->template_name . ' to ' . $cache_path);    
+    if (file_put_contents($cache_path, $this->cache_prefix . $template->template()) === FALSE)
+      throw new TemplateLoaderException('Could not cache ' . $name . ' to ' . $cache_path);
+
+    return $template;
   }
 
   /*! Returns the template path for a given template name. */
@@ -145,7 +149,7 @@ class TemplateLoader
   /*! Returns the cache path for a given template name. */
   protected function _CachePath($name)
   {
-    return self::$cache_path . '/' . $name . '.phpi';
+    return $this->cache_path . $name . '.phpi';
   }
 }
 

@@ -51,7 +51,7 @@ class Template
     return $template;
   }
 
-  static public function NewFromCompiledData($data)
+  static public function NewWithCompiledData($data)
   {
     $template = new Template('');
     $template->data = $data;
