@@ -92,7 +92,11 @@ class RootController
     // to:
     //    http://example.com/webapp/index.php/user/view/42
     // ... which then becomes accessible from PATH_INFO.
-    $url = $this->request->data['_SERVER']['PATH_INFO'];
+    $data = $this->request->data['_SERVER'];
+    if (isset($data['PATH_INFO']))
+      $url = $data['PATH_INFO'];
+    else
+      $url = '/';
     if ($url[0] == '/')
       $url = substr($url, 1);
 
