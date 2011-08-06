@@ -81,4 +81,26 @@ class OutputFilter
   protected function _CreateBodyForResponse(Request $request,
                                             Response $response)
   {}
+
+  /*!
+    Creates an XML tree from an array. Equivalent to json_encode.
+  */
+  protected function _EncodeXML($data)
+  {
+    $response = new \SimpleXMLElement('<response/>');
+
+    $writer = function($elm, $parent) use (&$writer) {
+      foreach ($elm as $key => $value) {
+        if (is_scalar($value)) {
+          $parent->AddChild($key, $value);
+        } else {
+          $new_parent = $parent->AddChild($key);
+          $writer($value, $new_parent);
+        }
+      }
+    };
+
+    $writer($data, $response);
+    return $response->AsXML();
+  }
 }
