@@ -48,8 +48,11 @@ class Controller extends http\RestAction
     try {
       $response->data = $this->model->Fetch();
     } catch (ModelException $e) {
-      $response->data['message'] = $e->GetMessage();
+      $response->body = $e->GetMessage();
       $response->response_code = http\ResponseCode::NOT_FOUND;
+    } catch (\PDOException $e) {
+      $response->body = $e->GetMessage();
+      $response->response_code = http\ResponseCode::INTERNAL_SERVER_ERROR;
     }
   }
 
@@ -61,8 +64,11 @@ class Controller extends http\RestAction
       $this->model->Update();
       $response->data = $this->model->Fetch();
     } catch (ModelException $e) {
-      $response->data['message'] = $e->GetMessage();
+      $response->body = $e->GetMessage();
       $response->response_code = http\ResponseCode::NOT_FOUND;
+    } catch (\PDOException $e) {
+      $response->body = $e->GetMessage();
+      $response->response_code = http\ResponseCode::INTERNAL_SERVER_ERROR;
     }
   }
 
@@ -73,8 +79,11 @@ class Controller extends http\RestAction
     try {
       $this->model->Delete();
     } catch (ModelException $e) {
-      $response->data['message'] = $e->GetMessage();
+      $response->body = $e->GetMessage();
       $response->response_code = http\ResponseCode::BAD_REQUEST;
+    } catch (\PDOException $e) {
+      $response->body = $e->GetMessage();
+      $response->response_code = http\ResponseCode::INTERNAL_SERVER_ERROR;
     }
   }
 
@@ -86,8 +95,11 @@ class Controller extends http\RestAction
       $this->model->Insert();
       $response->data = $this->model->Fetch();
     } catch (ModelException $e) {
-      $response->data['message'] = $e->GetMessage();
+      $response->body = $e->GetMessage();
       $response->response_code = http\ResponseCode::BAD_REQUEST;
+    } catch (\PDOException $e) {
+      $response->body = $e->GetMessage();
+      $response->response_code = http\ResponseCode::INTERNAL_SERVER_ERROR;
     }
   }
 }
