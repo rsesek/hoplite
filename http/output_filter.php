@@ -104,7 +104,7 @@ class OutputFilter
     // heuristics.
 
     // If this was from an XHR, assume JSON.
-    if (!$type && isset($request->data['_SERVER']['X_REQUESTED_WITH']))
+    if (!$type && isset($request->data['_SERVER']['HTTP_X_REQUESTED_WITH']))
       $type = 'json';
 
     // Check if an Action specified an overriding response type.
