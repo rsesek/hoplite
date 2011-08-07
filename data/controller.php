@@ -44,7 +44,7 @@ class Controller extends http\RestAction
   /*! Gets the data from the model. */
   public function DoGet(http\Request $request, http\Response $response)
   {
-    $this->model->SetFrom($request->data);
+    $this->model->SetFromarray_merge($request->data, $request->data['_GET']);
     try {
       $response->data = $this->model->Fetch();
     } catch (ModelException $e) {
@@ -59,7 +59,7 @@ class Controller extends http\RestAction
   /*! Updates an object in the store. */
   public function DoPost(http\Request $request, http\Response $response)
   {
-    $this->model->SetFrom($request->data);
+    $this->model->SetFrom(array_merge($request->data, $request->data['_POST']));
     try {
       $this->model->Update();
       $response->data = $this->model->Fetch();
@@ -75,7 +75,7 @@ class Controller extends http\RestAction
   /*! Deletes the object from the store. */
   public function DoDelete(http\Request $request, http\Response $response)
   {
-    $this->model->SetFrom($request->data);
+    $this->model->SetFrom(array_merge($request->data, $request->data['_POST']));
     try {
       $this->model->Delete();
     } catch (ModelException $e) {
@@ -90,7 +90,7 @@ class Controller extends http\RestAction
   /*! Updates an object in the store. */
   public function DoPut(http\Request $request, http\Response $response)
   {
-    $this->model->SetFrom($request->data);
+    $this->model->SetFrom(array_merge($request->data, $request->data['_POST']));
     try {
       $this->model->Insert();
       $response->data = $this->model->Fetch();
