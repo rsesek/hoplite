@@ -160,7 +160,7 @@ class UrlMap
 
           // If this fragment is a key to be extracted, do so into a temporary
           // array.
-          if ($rule_frag[0] == '{' && substr($rule_frag, -1) == '}') {
+          if (strlen($rule_frag) && $rule_frag[0] == '{' && substr($rule_frag, -1) == '}') {
             $key = substr($rule_frag, 1, -1);
             $extractions[$key] = $fragments[$i];
           }
