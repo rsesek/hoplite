@@ -95,4 +95,15 @@ class TemplateTest extends \PHPUnit_Framework_TestCase
     }
     $this->assertTrue($catch);
   }
+
+  public function testRenderVars()
+  {
+    $template = Template::NewWithData('Some {% $v %}');
+    $this->assertEquals('Some value', $template->Render(array('v' => 'value')));
+
+    $template->v = 'other';
+    $this->assertEquals('Some thing', $template->Render(array('v' => 'thing')));
+
+    $this->assertEquals('Some other', $template->Render());
+  }
 }

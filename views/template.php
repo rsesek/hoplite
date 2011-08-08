@@ -75,17 +75,24 @@ class Template
   }
 
   /*! This includes the template and renders it out. */
-  public function Render()
+  public function Render($vars = array())
   {
     $_template = $this->data;
-    $_vars = $this->vars;
+    $_vars = array_merge($this->vars, $vars);
     $render = function () use ($_template, $_vars) {
       extract($_vars);
       eval('?>' . $_template . '<' . '?');
     };
 
     ob_start();
+
+    $error = error_reporting();
+    error_reporting($error & ~E_NOTICE);
+
     $render();
+
+    error_reporting($error);
+
     $data = ob_get_contents();
     ob_end_clean();
     return $data;
