@@ -17,6 +17,7 @@
 namespace hoplite\http;
 
 require_once HOPLITE_ROOT . '/http/response_code.php';
+require_once HOPLITE_ROOT . '/views/template_loader.php';
 
 /*!
   The OutputFilter is executed after all Actions have been processed. The
@@ -33,6 +34,11 @@ class OutputFilter
              produce, regardless of the request type.
   */
   const RESPONSE_TYPE = 'response_type';
+
+  /*! @const A key in Response#context to render a template with the
+             Response#data when creating a HTML body.
+  */
+  const RENDER_TEMPLATE = 'template';
 
   /*!
     Constructor that takes a reference to the RootController.
@@ -123,6 +129,10 @@ class OutputFilter
       $response->body = $this->_EncodeXML($response->data);
     } else if ($type == 'html') {
       $response->headers['Content-Type'] = 'text/html';
+      if (isset($response->context[self::RENDER_TEMPLATE])) {
+        $template = \hoplite\views\TemplateLoader::Fetch($response->context[self::RENDER_TEMPLATE]);
+        $response->body = $template->Render($response->data);
+      }
     }
   }
 
