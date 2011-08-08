@@ -44,7 +44,7 @@ class Controller extends http\RestAction
   /*! Gets the data from the model. */
   public function DoGet(http\Request $request, http\Response $response)
   {
-    $this->model->SetFromarray_merge($request->data, $request->data['_GET']);
+    $this->model->SetFrom(array_merge($request->data, $request->data['_GET']));
     try {
       $response->data = $this->model->Fetch();
     } catch (ModelException $e) {
