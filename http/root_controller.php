@@ -104,7 +104,7 @@ class RootController
     $this->request->url = $url;
     $this->request->http_method = $this->request->data['_SERVER']['REQUEST_METHOD'];
 
-    $this->delegate->OnInitialRequest($this->request);
+    $this->delegate->OnInitialRequest($this->request, $this->response);
 
     // Dispatch the request to an Action.
     $this->RouteRequest($this->request);
@@ -193,7 +193,7 @@ class RootController
 */
 interface RootControllerDelegate
 {
-  public function OnInitialRequest(Request $request);
+  public function OnInitialRequest(Request $request, Response $response);
 
   public function WillRouteRequest(Request $request, Response $response);
 
