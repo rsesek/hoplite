@@ -16,6 +16,8 @@
 
 namespace hoplite\views;
 
+require_once HOPLITE_ROOT . '/views/template.php';
+
 /*!
   This class knows how to load and cache templates to the file system.
 */
