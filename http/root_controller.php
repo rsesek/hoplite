@@ -104,6 +104,10 @@ class RootController
     $this->request->url = $url;
     $this->request->http_method = $this->request->data['_SERVER']['REQUEST_METHOD'];
 
+    // Extract any PUT data as POST params.
+    if ($this->request->http_method == 'PUT')
+      parse_str(file_get_contents('php://input'), $this->request->data['_POST']);
+
     $this->delegate->OnInitialRequest($this->request, $this->response);
 
     // Dispatch the request to an Action.
