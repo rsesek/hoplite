@@ -160,4 +160,38 @@ class RootControllerTest extends \PHPUnit_Framework_TestCase
     $mock->set_output_filter($output_filter);
     $mock->Stop();
   }
+
+  public function testAbsolutify()
+  {
+    $globals = array(
+      '_SERVER' => array(
+        'HTTP_HOST' => 'www.bluestatic.org',
+        'REQUEST_URI' => '/hoplite/webapp/test/path',
+        'PATH_INFO' => '/test/path',
+        'SERVER_PORT' => 80,
+      ),
+    );
+    $mock = new \hoplite\http\RootController($globals);
+
+    $this->assertEquals($mock->MakeURL('/'), '/hoplite/webapp/');
+    $this->assertEquals($mock->MakeURL('/', TRUE), 'http://www.bluestatic.org/hoplite/webapp/');
+
+    $this->assertEquals($mock->MakeURL('/path/2'), '/hoplite/webapp/path/2');
+    $this->assertEquals($mock->MakeURL('/path/3', TRUE), 'http://www.bluestatic.org/hoplite/webapp/path/3');
+
+    $globals['_SERVER']['HTTPS'] = 'on';
+    $globals['_SERVER']['SERVER_PORT'] = 443;
+    $mock = new \hoplite\http\RootController($globals);
+    $this->assertEquals($mock->MakeURL('/'), '/hoplite/webapp/');
+    $this->assertEquals($mock->MakeURL('/', TRUE), 'https://www.bluestatic.org/hoplite/webapp/');
+
+    $this->assertEquals($mock->MakeURL('/path/2'), '/hoplite/webapp/path/2');
+    $this->assertEquals($mock->MakeURL('/path/3', TRUE), 'https://www.bluestatic.org/hoplite/webapp/path/3');
+
+    $globals['_SERVER']['SERVER_PORT'] = 8080;
+    $mock = new \hoplite\http\RootController($globals);
+    $this->assertEquals($mock->MakeURL('/path/2'), '/hoplite/webapp/path/2');
+    $this->assertEquals($mock->MakeURL('/', TRUE), 'https://www.bluestatic.org:8080/hoplite/webapp/');
+    $this->assertEquals($mock->MakeURL('/path/3', TRUE), 'https://www.bluestatic.org:8080/hoplite/webapp/path/3');
+  }
 }

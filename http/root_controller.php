@@ -185,6 +185,40 @@ class RootController
         return $pattern;
     }
   }
+
+  /*!
+    Given a relative path, return an absolute path from the root controller.
+    @param string The relative path for which a URL will be created
+    @param bool Include the HTTP scheme and host to create an RFC URL if true;
+                if false an absolute path will be returned.
+  */
+  public function MakeURL($new_path, $url = FALSE)
+  {
+    // Detect the common paths between the REQUEST_URI and the PATH_INFO. That
+    // common piece will be the path to the root controller.
+    $request_uri = $this->request()->data['_SERVER']['REQUEST_URI'];
+    $path_info = $this->request()->data['_SERVER']['PATH_INFO'];
+    $common_uri = strstr($request_uri, $path_info, TRUE);
+
+    // If just constructing an absolute path, return that now.
+    if (!$url)
+      return $common_uri . $new_path;
+
+    // Otherwise, build the host part.
+    $url = 'http';
+    if (isset($this->request()->data['_SERVER']['HTTPS']) &&
+        $this->request()->data['_SERVER']['HTTPS'] == 'on') {
+      $url .= 's';
+    }
+    $url .= '://' . $this->request()->data['_SERVER']['HTTP_HOST'];
+
+    $port = $this->request()->data['_SERVER']['SERVER_PORT'];
+    if ($port != 80 && $port != 443)
+      $url .= ':' . $port;
+
+    $url .= $common_uri;
+    return $url . $new_path;
+  }
 }
 
 /*!
