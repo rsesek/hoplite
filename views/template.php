@@ -18,7 +18,7 @@ namespace hoplite\views;
 
 require_once HOPLITE_ROOT . '/base/filter.php';
 
-/*
+/*!
   Renders a template with additional vars.
   @param string The template name to render
   @param array Variables with which to render.
@@ -26,6 +26,16 @@ require_once HOPLITE_ROOT . '/base/filter.php';
 function Inject($name, $vars = array())
 {
   echo TemplateLoader::Fetch($name)->Render($vars);
+}
+
+/*! @brief Creates a URL via RootController::MakeURL().
+  This requires the root controller be set in the $GLOBALS as
+  hoplite\http\RootController.
+  @param string Path.
+*/
+function MakeURL($path)
+{
+  return $GLOBALS['hoplite\http\RootController']->MakeURL($path, FALSE);
 }
 
 /*!

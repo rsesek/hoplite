@@ -108,6 +108,9 @@ class RootController
     if ($this->request->http_method == 'PUT')
       parse_str(file_get_contents('php://input'), $this->request->data['_POST']);
 
+    // Register self as the active instance.
+    $GLOBALS[__CLASS__] = $this;
+
     $this->delegate->OnInitialRequest($this->request, $this->response);
 
     // Dispatch the request to an Action.
