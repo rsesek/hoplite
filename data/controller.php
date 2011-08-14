@@ -26,9 +26,9 @@ require_once HOPLITE_ROOT . '/http/rest_action.php';
   validation and authentication.
 
   This class is semi-abstract in that it cannot be used directly. At minimum,
-  FilterRequest() needs to be overridden to select the Model to use.
+  _SelectModel() needs to be overridden to select the Model to use.
 */
-class Controller extends http\RestAction
+abstract class Controller extends http\RestAction
 {
   /*! @var hoplite\data\Model The object that will be operated on. */
   protected $model = NULL;
@@ -36,15 +36,17 @@ class Controller extends http\RestAction
   /*! Selects the Model object. */
   public function FilterRequest(http\Request $request, http\Response $response)
   {
-    // Example:
-    // $this->model = new webapp\models\User();
-    throw new ControllerException('Model not selected');
+    $this->model = $this->_SelectModel();
+    $this->model->SetFrom(array_merge(
+        $request->data, $request->data['_POST'], $request->data['_GET']));
   }
+
+  /*! Returns a new instance of the Model that this object will control. */
+  abstract protected function _SelectModel();
 
   /*! Gets the data from the model. */
   public function DoGet(http\Request $request, http\Response $response)
   {
-    $this->model->SetFrom(array_merge($request->data, $request->data['_GET']));
     try {
       $response->data = $this->model->Fetch();
     } catch (ModelException $e) {
@@ -59,7 +61,6 @@ class Controller extends http\RestAction
   /*! Updates an object in the store. */
   public function DoPost(http\Request $request, http\Response $response)
   {
-    $this->model->SetFrom(array_merge($request->data, $request->data['_POST']));
     try {
       $this->model->Update();
       $response->data = $this->model->Fetch();
@@ -75,7 +76,6 @@ class Controller extends http\RestAction
   /*! Deletes the object from the store. */
   public function DoDelete(http\Request $request, http\Response $response)
   {
-    $this->model->SetFrom(array_merge($request->data, $request->data['_POST']));
     try {
       $this->model->Delete();
     } catch (ModelException $e) {
@@ -90,7 +90,6 @@ class Controller extends http\RestAction
   /*! Updates an object in the store. */
   public function DoPut(http\Request $request, http\Response $response)
   {
-    $this->model->SetFrom(array_merge($request->data, $request->data['_POST']));
     try {
       $this->model->Insert();
       $response->data = $this->model->Fetch();
