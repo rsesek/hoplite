@@ -18,11 +18,21 @@ namespace hoplite\views;
 
 require_once HOPLITE_ROOT . '/base/filter.php';
 
+/*
+  Renders a template with additional vars.
+  @param string The template name to render
+  @param array Variables with which to render.
+*/
+function Inject($name, $vars = array())
+{
+  echo TemplateLoader::Fetch($name)->Render($vars);
+}
+
 /*!
- A Template is initialized with a text file (typically HTML) and can render it
- with data from some model. It has a short macro expansion system, equivalent
- to PHP short open tags, but usable on all installations. Template caching of
- the parsed state is available.
+  A Template is initialized with a text file (typically HTML) and can render it
+  with data from some model. It has a short macro expansion system, equivalent
+  to PHP short open tags, but usable on all installations. Template caching of
+  the parsed state is available.
 */
 class Template
 {
