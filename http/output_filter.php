@@ -123,7 +123,7 @@ class OutputFilter
 
     if ($type == 'json') {
       $response->headers['Content-Type'] = 'application/json';
-      $response->body = json_encode($response->data);
+      $response->body = json_encode($response->data, JSON_NUMERIC_CHECK);
     } else if ($type == 'xml') {
       $response->headers['Content-Type'] = 'application/xml';
       $response->body = $this->_EncodeXML($response->data);
