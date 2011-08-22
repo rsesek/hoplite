@@ -205,7 +205,10 @@ class RootController
     // common piece will be the path to the root controller.
     $request_uri = $this->request()->data['_SERVER']['REQUEST_URI'];
     $path_info = $this->request()->data['_SERVER']['PATH_INFO'];
-    $common_uri = strstr($request_uri, $path_info, TRUE);
+    if ($path_info === NULL)
+      $common_uri = substr($request_uri, 0, -1);
+    else
+      $common_uri = strstr($request_uri, $path_info, TRUE);
 
     // If just constructing an absolute path, return that now.
     if (!$url)
