@@ -96,31 +96,7 @@ class OutputFilter
   protected function _CreateBodyForResponse(Request $request,
                                             Response $response)
   {
-    $type = NULL;
-
-    // See if the HTTP request contains the desired output format.
-    if (isset($request->data['format'])) {
-      if ($request->data['format'] == 'xml')
-        $type = 'xml';
-      else if ($request->data['format'] == 'json')
-        $type = 'json';
-    }
-
-    // If the request didn't specify a type, try and figure it out using
-    // heuristics.
-
-    // If this was from an XHR, assume JSON.
-    if (!$type && isset($request->data['_SERVER']['HTTP_X_REQUESTED_WITH']))
-      $type = 'json';
-
-    // Check if an Action specified an overriding response type.
-    if (isset($response->context[self::RESPONSE_TYPE]))
-      $type = $response->context[self::RESPONSE_TYPE];
-
-    // If no type has been determined, just assume HTML.
-    if (!$type)
-      $type = 'html';
-
+    $type = $this->_GetResponseType($request, $response);
     if ($type == 'json') {
       $response->headers['Content-Type'] = 'application/json';
       $response->body = json_encode($response->data, JSON_NUMERIC_CHECK);
@@ -134,6 +110,34 @@ class OutputFilter
         $response->body = $template->Render($response->data);
       }
     }
+  }
+
+  /*!
+    Determines based on the Request what format the response should be in.
+  */
+  protected function _GetResponseType(Request $request, Response $response)
+  {
+    // Check if an Action specified an overriding response type.
+    if (isset($response->context[self::RESPONSE_TYPE]))
+      return $response->context[self::RESPONSE_TYPE];
+
+    // See if the HTTP request contains the desired output format.
+    if (isset($request->data['format'])) {
+      if ($request->data['format'] == 'xml')
+        return 'xml';
+      else if ($request->data['format'] == 'json')
+        return 'json';
+    }
+
+    // If the request didn't specify a type, try and figure it out using
+    // heuristics.
+
+    // If this was from an XHR, assume JSON.
+    if (isset($request->data['_SERVER']['HTTP_X_REQUESTED_WITH']))
+      return 'json';
+
+    // If no type has been determined, just assume HTML.
+    return 'html';
   }
 
   /*!
