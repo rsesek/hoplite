@@ -133,6 +133,15 @@ class RootController
   }
 
   /*!
+    Sets the response code and stops the controller. Returns void.
+  */
+  public function StopWithCode($code)
+  {
+    $this->response->response_code = $code;
+    $this->Stop();
+  }
+
+  /*!
     Wrapper around PHP exit().
   */
   protected function _Exit()
