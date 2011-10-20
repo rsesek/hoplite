@@ -80,6 +80,10 @@ class RootController
   {
     $this->delegate->Bind($delegate);
   }
+  public function delegate()
+  {
+    return $this->delegate->Get();
+  }
 
   /*!
     Createst the Request and Response that are used throughout the duration of
