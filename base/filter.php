@@ -36,6 +36,11 @@ function String($str)
     return str_replace($find, $replace, $str);
 }
 
+function RawString($str)
+{
+  return $str;
+}
+
 function Int($int)
 {
     return intval($int);
