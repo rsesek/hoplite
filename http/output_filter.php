@@ -151,7 +151,7 @@ class OutputFilter
   /*!
     Creates an XML tree from an array. Equivalent to json_encode.
   */
-  private function _EncodeXML($data)
+  protected function _EncodeXML($data)
   {
     $response = new \SimpleXMLElement('<response/>');
 
