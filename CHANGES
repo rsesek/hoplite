@@ -1,0 +1,7 @@
+Version 1.1
+================================================================================
+- Add hoplite\http\Input for request data sanitization.
+
+Version 1.0
+================================================================================
+- Creation of the CHANGES file.
