@@ -1,5 +1,7 @@
 Version 1.1
 ================================================================================
+- Add hoplite\data\ProfilingPDO to add profiling to database access.
+- Add hoplite\base\Profiling static utility class.
 - Add hoplite\http\Input for request data sanitization.
 
 Version 1.0
