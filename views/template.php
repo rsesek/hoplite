@@ -16,7 +16,10 @@
 
 namespace hoplite\views;
 
+use \hoplite\base\Profiling;
+
 require_once HOPLITE_ROOT . '/base/filter.php';
+require_once HOPLITE_ROOT . '/base/profiling.php';
 
 /*!
   Renders a template with additional vars.
@@ -64,16 +67,16 @@ class Template
     $this->template_name = $name;
   }
 
-  static public function NewWithData($data)
+  static public function NewWithData($name, $data)
   {
-    $template = new Template('');
+    $template = new Template($name);
     $template->data = $template->_ProcessTemplate($data);
     return $template;
   }
 
-  static public function NewWithCompiledData($data)
+  static public function NewWithCompiledData($name, $data)
   {
-    $template = new Template('');
+    $template = new Template($name);
     $template->data = $data;
     return $template;
   }
@@ -112,6 +115,9 @@ class Template
     $render();
 
     error_reporting($error);
+
+    if (Profiling::IsProfilingEnabled())
+      TemplateLoader::GetInstance()->MarkTemplateRendered($this->name);
 
     $data = ob_get_contents();
     ob_end_clean();

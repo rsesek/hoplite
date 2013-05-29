@@ -16,6 +16,9 @@
 
 namespace hoplite\views;
 
+use \hoplite\base\Profiling;
+
+require_once HOPLITE_ROOT . '/base/profiling.php';
 require_once HOPLITE_ROOT . '/views/template.php';
 
 /*!
@@ -46,6 +49,11 @@ class TemplateLoader
   /*! @var array An array of Template objects, keyed by the template name. */
   protected $cache = array();
 
+  /*! @var array Array of template usage counts, keyed by name. Only used
+                 when profiling.
+  */
+  protected $usage = array();
+
   /*! Gets the singleton instance. */
   static public function GetInstance()
   {
@@ -75,6 +83,9 @@ class TemplateLoader
   */
   public function Load($name)
   {
+    if (Profiling::IsProfilingEnabled() && !isset($this->usage[$name]))
+      $this->usage[$name] = 0;
+
     // First check the memory cache.
     if (isset($this->cache[$name]))
       return clone $this->cache[$name];
@@ -98,6 +109,15 @@ class TemplateLoader
     return self::GetInstance()->Load($name);
   }
 
+  /*! Marks a template as having been used. */
+  public function MarkTemplateRendered($name)
+  {
+    if (!isset($this->usage[$name]))
+      throw new \InvalidArgumentException("Template $name has not been loaded through this instance");
+
+    $this->usage[$name]++;
+  }
+
   /*!
     Loads a cached filesystem template if it is up-to-date.
 
@@ -119,7 +139,7 @@ class TemplateLoader
     if ($data === FALSE)
       return NULL;
 
-    return Template::NewWithCompiledData($data);
+    return Template::NewWithCompiledData($name, $data);
   }
 
   /*!
@@ -139,7 +159,7 @@ class TemplateLoader
     if ($data === FALSE)
       throw new TemplateLoaderException('Could not load template ' . $name);
 
-    $template = Template::NewWithData($data);
+    $template = Template::NewWithData($name, $data);
 
     // Cache the file.
     if (file_put_contents($cache_path, $this->cache_prefix . $template->template()) === FALSE)

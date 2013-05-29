@@ -28,20 +28,20 @@ class TemplateTest extends \PHPUnit_Framework_TestCase
 
   public function testRenderSimple()
   {
-    $template = Template::NewWithData('Hello World');
+    $template = Template::NewWithData('test', 'Hello World');
     $this->assertEquals('Hello World', $this->_Render($template));
   }
 
   public function testRender1Var()
   {
-    $template = Template::NewWithData('Hello, {% $name | str %}');
+    $template = Template::NewWithData('test', 'Hello, {% $name | str %}');
     $template->name = 'Robert';
     $this->assertEquals('Hello, Robert', $this->_Render($template));
   }
 
   public function testRender2Vars()
   {
-    $template = Template::NewWithData('Hello, {% $name %}. Today is the {% $date->day | int %} of July.');
+    $template = Template::NewWithData('test', 'Hello, {% $name %}. Today is the {% $date->day | int %} of July.');
     $date = new \stdClass();
     $date->day = 26;
     $template->name = 'Robert';
@@ -51,7 +51,7 @@ class TemplateTest extends \PHPUnit_Framework_TestCase
 
   public function testRenderIf()
   {
-    $template = Template::NewWithData(
+    $template = Template::NewWithData('test',
         'You are {!% if (!$user->logged_in): %}not logged in{!% else: %}{% $user->name %}{!% endif %}');
     $template->user = new \stdClass();
     $template->user->logged_in = TRUE;
@@ -66,7 +66,7 @@ class TemplateTest extends \PHPUnit_Framework_TestCase
   {
     try {
       $catch = FALSE;
-      $template = Template::NewWithData('Hello %}');
+      $template = Template::NewWithData('test', 'Hello %}');
     } catch (\hoplite\views\TemplateException $e) {
       $message = $e->GetMessage();
       // Check that the column number is correct.
@@ -77,7 +77,7 @@ class TemplateTest extends \PHPUnit_Framework_TestCase
 
     try {
       $catch = FALSE;
-      $template = Template::NewWithData("Salve\n{% {%");
+      $template = Template::NewWithData('test', "Salve\n{% {%");
     } catch (\hoplite\views\TemplateException $e) {
       $message = $e->GetMessage();
       $this->assertTrue(strpos($message, '2:4') !== FALSE);
@@ -87,7 +87,7 @@ class TemplateTest extends \PHPUnit_Framework_TestCase
 
     try {
       $catch = FALSE;
-      $template = Template::NewWithData("Salve\n\n{% \$name {!%");
+      $template = Template::NewWithData('test', "Salve\n\n{% \$name {!%");
     } catch (\hoplite\views\TemplateException $e) {
       $message = $e->GetMessage();
       $this->assertTrue(strpos($message, '3:10') !== FALSE);
@@ -98,7 +98,7 @@ class TemplateTest extends \PHPUnit_Framework_TestCase
 
   public function testRenderVars()
   {
-    $template = Template::NewWithData('Some {% $v %}');
+    $template = Template::NewWithData('test', 'Some {% $v %}');
     $this->assertEquals('Some value', $template->Render(array('v' => 'value')));
 
     $template->v = 'other';
