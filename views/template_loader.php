@@ -1,11 +1,11 @@
 <?php
 // Hoplite
 // Copyright (c) 2011 Blue Static
-// 
+//
 // This program is free software: you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation, either version 3 of the License, or any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful, but WITHOUT
 // ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 // FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
@@ -22,7 +22,13 @@ require_once HOPLITE_ROOT . '/base/profiling.php';
 require_once HOPLITE_ROOT . '/views/template.php';
 
 /*!
-  This class knows how to load and cache templates to the file system.
+  The TemplateLoader manages the reading of templates from the file system.
+
+  It can also work with a CacheBackend to store the compiled template data to
+  increase performance.
+
+  Internally it also maintains a cache that it will consult after a template is
+  loaded for the first time.
 */
 class TemplateLoader
 {
@@ -35,16 +41,8 @@ class TemplateLoader
   */
   protected $template_path = '%s.tpl';
 
-  /*! @var string The cache path for templates. Unlike |$template_path|, this
-                  should only be a path, to which the cached template name will
-                  be appended. This should not end with a trailing slash.
-  */
-  protected $cache_path = '/tmp/phalanx_views';
-
-  /*! @var string A header to put at the beginning of each cached template file,
-                  common for setting include paths or cache debug information.
-  */
-  protected $cache_prefix = '';
+  /*! @var CacheBackend A cache for compiled template data. */
+  protected $cache_backend = NULL;
 
   /*! @var array An array of Template objects, keyed by the template name. */
   protected $cache = array();
@@ -68,10 +66,10 @@ class TemplateLoader
 
   /*! Accessors */
   public function set_template_path($path) { $this->template_path = $path; }
-  function template_path() { return $this->template_path; }
-  
-  public function set_cache_path($path) { $this->cache_path = $path; }
-  public function cache_path() { return $this->cache_path; }
+  public function template_path() { return $this->template_path; }
+
+  public function set_cache_backend(CacheBackend $backend) { $this->cache_backend = $backend; }
+  public function cache_backend() { return $this->cache_backend; }
 
   /*!
     Loads a template from a file, creates a Template object, and returns a copy
@@ -90,15 +88,15 @@ class TemplateLoader
     if (isset($this->cache[$name]))
       return clone $this->cache[$name];
 
-    // Then check the filesystem cache.
-    $template = $this->_LoadIfCached($name);
+    // Then check if the cache backend has it.
+    $template = $this->_QueryCache($name);
     if ($template) {
       $this->cache[$name] = $template;
       return clone $template;
     }
 
     // Finally, parse and cache the template.
-    $template = $this->_Cache($name);
+    $template = $this->_Load($name);
     $this->cache[$name] = $template;
     return clone $template;
   }
@@ -119,41 +117,36 @@ class TemplateLoader
   }
 
   /*!
-    Loads a cached filesystem template if it is up-to-date.
+    Queries the optional CacheBackend for a template.
 
     @param string Template name
 
     @return Template|NULL
   */
-  protected function _LoadIfCached($name)
+  protected function _QueryCache($name)
   {
-    $cache_path = $this->_CachePath($name);
-    $tpl_path   = $this->_TemplatePath($name);
-
-    // Make sure the cached file exists and hasn't gotten out-of-date.
-    if (!file_exists($cache_path) || filemtime($cache_path) < filemtime($tpl_path))
+    if (!$this->cache_backend)
       return NULL;
 
-    // Load the contents of the cache.
-    $data = @file_get_contents($cache_path);
-    if ($data === FALSE)
+    $tpl_path = $this->_TemplatePath($name);
+    $data = $this->cache_backend->GetTemplateDataForName($name, filemtime($tpl_path));
+    if (!$data)
       return NULL;
 
     return Template::NewWithCompiledData($name, $data);
   }
 
   /*!
-    Loads a raw template from the file system, stores the compiled template in
-    the file system, and returns a new template object with that data.
+    Loads a raw template from the file system and compiles it. If the optional
+    CacheBackend is present, it will cache the compiled data.
 
     @param string Template name.
 
     @return Template
   */
-  protected function _Cache($name)
+  protected function _Load($name)
   {
-    $cache_path = $this->_CachePath($name);
-    $tpl_path   = $this->_TemplatePath($name);
+    $tpl_path = $this->_TemplatePath($name);
 
     $data = @file_get_contents($tpl_path);
     if ($data === FALSE)
@@ -161,9 +154,10 @@ class TemplateLoader
 
     $template = Template::NewWithData($name, $data);
 
-    // Cache the file.
-    if (file_put_contents($cache_path, $this->cache_prefix . $template->template()) === FALSE)
-      throw new TemplateLoaderException('Could not cache ' . $name . ' to ' . $cache_path);
+    if ($this->cache_backend) {
+      $this->cache_backend->StoreCompiledTemplate(
+          $name, filemtime($tpl_path), $template->template());
+    }
 
     return $template;
   }
@@ -172,12 +166,6 @@ class TemplateLoader
   protected function _TemplatePath($name)
   {
     return sprintf($this->template_path, $name);
-  }
-
-  /*! Returns the cache path for a given template name. */
-  protected function _CachePath($name)
-  {
-    return $this->cache_path . $name . '.phpi';
   }
 }
 

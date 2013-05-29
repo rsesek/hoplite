@@ -1,8 +1,11 @@
-Version 1.1
+Version 2.0
 ================================================================================
-- Add hoplite\data\ProfilingPDO to add profiling to database access.
-- Add hoplite\base\Profiling static utility class.
-- Add hoplite\http\Input for request data sanitization.
+- Split caching logic out of views\TemplateLoader into an interface
+  views\CacheBackend and views\FileCacheBackend.
+- Add template usage profiling to views\.
+- Add data\ProfilingPDO to add profiling to database access.
+- Add base\Profiling static utility class.
+- Add http\Input for request data sanitization.
 
 Version 1.0
 ================================================================================

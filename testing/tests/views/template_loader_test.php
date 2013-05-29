@@ -1,11 +1,11 @@
 <?php
 // Hoplite
 // Copyright (c) 2011 Blue Static
-// 
+//
 // This program is free software: you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation, either version 3 of the License, or any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful, but WITHOUT
 // ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 // FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
@@ -17,123 +17,59 @@
 namespace hoplite\test;
 use hoplite\views as views;
 
+require_once HOPLITE_ROOT . '/views/cache_backend.php';
 require_once HOPLITE_ROOT . '/views/template_loader.php';
-
-class TestTemplateLoader extends views\TemplateLoader
-{
-  public function T_CachePath($path)
-  {
-    return $this->_CachePath($path);
-  }
-
-  public function T_LoadIfCached($name)
-  {
-      return $this->_LoadIfCached($name);
-  }
-}
 
 class TemplateLoaderTest extends \PHPUnit_Framework_TestCase
 {
   public function setUp()
   {
-    $this->fixture = new TestTemplateLoader();
-
-    $path  = dirname(__FILE__) . '/cache/';
-    $files = scandir($path);
-    foreach ($files as $file)
-      if ($file[0] != '.')
-        unlink($path . $file);
-  }
-
-  protected function _SetUpPaths()
-  {
+    $this->fixture = new views\TemplateLoader();
     $this->fixture->set_template_path(dirname(__FILE__) . '/%s.tpl');
-    $this->fixture->set_cache_path(dirname(__FILE__) . '/cache/');
+
+    $this->cache = $this->getMock('\\hoplite\\views\\CacheBackend');
+    $this->fixture->set_cache_backend($this->cache);
   }
 
   public function testTemplatePath()
   {
-    $this->assertEquals('%s.tpl', $this->fixture->template_path());
-
     $path = '/webapp/views/%s.tpl';
     $this->fixture->set_template_path($path);
     $this->assertEquals($path, $this->fixture->template_path());
   }
 
-  public function testSetCachePath()
-  {
-    $this->assertEquals('/tmp/phalanx_views', $this->fixture->cache_path());
-
-    $path = '/cache/path';
-    $this->fixture->set_cache_path($path);
-    $this->assertEquals($path, $this->fixture->cache_path());
-  }
-
-  public function testCachePath()
-  {
-    $this->fixture->set_cache_path('/test/value/');
-    $this->assertEquals('/test/value/name.phpi', $this->fixture->T_CachePath('name'));
-  }
-
   public function testCacheMiss()
   {
-    $this->_SetUpPaths();
-
-    $files = scandir($this->fixture->cache_path());
-    $this->assertEquals(2, count($files));  // Only dotfiles.
-
-    $this->fixture->Load('cache_test');
-
-    $files = scandir($this->fixture->cache_path());
-    $this->assertEquals(3, count($files));
+    $this->cache->expects($this->once())
+                ->method('GetTemplateDataForName')
+                ->with($this->equalTo('cache_test'))
+                ->will($this->returnValue(NULL));
 
     $expected = file_get_contents(sprintf($this->fixture->template_path(), 'cache_test'));
-    $actual   = file_get_contents($this->fixture->cache_path() . '/cache_test.phpi');
-    $this->assertEquals($expected, $actual);
+
+    $this->cache->expects($this->once())
+                ->method('StoreCompiledTemplate')
+                ->with($this->equalTo('cache_test'),
+                       $this->greaterThan(0),
+                       $this->equalTo($expected));
+
+    $this->assertEquals($expected, $this->fixture->Load('cache_test')->template());
+    $this->assertEquals($expected, $this->fixture->Load('cache_test')->template());
   }
 
   public function testCacheHit()
   {
-    $this->_SetUpPaths();
-
     $expected = 'Cache hit!';
-    file_put_contents($this->fixture->cache_path() . '/cache_test.phpi', $expected);
+    $this->cache->expects($this->once())
+                ->method('GetTemplateDataForName')
+                ->with($this->equalTo('cache_test'))
+                ->will($this->returnValue($expected));
 
-    $files = scandir($this->fixture->cache_path());
-    $this->assertEquals(3, count($files));
-
-    $this->fixture->Load('cache_test');
-
-    $files = scandir($this->fixture->cache_path());
-    $this->assertEquals(3, count($files));
-
-    $actual = file_get_contents($this->fixture->cache_path() . '/cache_test.phpi');
-    $this->assertEquals($expected, $actual);
-  }
-
-  public function testCacheInvalidate()
-  {
-    $this->_SetUpPaths();
-    file_put_contents($this->fixture->cache_path() . '/cache_test.phpi', 'Invalid template data');
-
-    // Need to wait for the mtime to make a difference.
-    sleep(1);
-    clearstatcache();
-
-    // Touch the template to update its mtime.
-    touch(sprintf($this->fixture->template_path(), 'cache_test'));
-
-    $files = scandir($this->fixture->cache_path());
-    $this->assertEquals(3, count($files));
-
-    $this->fixture->Load('cache_test');
-
-    $files = scandir($this->fixture->cache_path());
-    $this->assertEquals(3, count($files));
-
-    $expected = file_get_contents(sprintf($this->fixture->template_path(), 'cache_test'));
-    $actual   = file_get_contents($this->fixture->cache_path() . '/cache_test.phpi');
-    $this->assertEquals($expected, $actual);
+    // The cache backend is only consulted once.
+    $this->assertEquals($expected, $this->fixture->Load('cache_test')->template());
+    $this->assertEquals($expected, $this->fixture->Load('cache_test')->template());
+    $this->assertEquals($expected, $this->fixture->Load('cache_test')->template());
+    $this->assertEquals($expected, $this->fixture->Load('cache_test')->template());
   }
 
   public function testSingleton()
@@ -144,7 +80,6 @@ class TemplateLoaderTest extends \PHPUnit_Framework_TestCase
     views\TemplateLoader::SetInstance($this->fixture);
     $this->assertSame(views\TemplateLoader::GetInstance(), $this->fixture);
 
-    $this->_SetUpPaths();
     $template = views\TemplateLoader::Fetch('cache_test');
     $this->assertEquals('This file should be cached.', $template->template());
   }
