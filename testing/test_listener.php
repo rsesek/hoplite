@@ -1,11 +1,11 @@
 <?php
 // Hoplite
 // Copyright (c) 2011 Blue Static
-// 
+//
 // This program is free software: you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation, either version 3 of the License, or any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful, but WITHOUT
 // ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 // FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
@@ -68,6 +68,14 @@ class TestListener extends \PHPUnit_Util_Printer implements \PHPUnit_Framework_T
     {
         $this->_Print(NULL, $this->_ErrorLocation($e));
         $this->_Print('  ', $e->GetMessage());
+        if ($e instanceof \PHPUnit_Framework_ExpectationFailedException) {
+            $comp = $e->GetComparisonFailure();
+            if ($comp instanceof \PHPUnit_Framework_ComparisonFailure) {
+                $this->_Print(' ==> ', $comp->GetExpectedAsString());
+                $this->_Print('', 'does not match');
+                $this->_Print(' ==> ', $comp->GetActualAsString());
+            }
+        }
         $this->_Print('[  FAILED  ]', $test->ToString() . ' (' . $this->_Round($time) . ' ms)', self::COLOR_RED);
         ++$this->suite_error_count;
         $this->failing[] = $test->ToString();
