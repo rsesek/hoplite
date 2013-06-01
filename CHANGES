@@ -1,5 +1,9 @@
 Version 2.0
 ================================================================================
+- Rewrote the template parser to allow customizable open and close tags, which
+  changed the grammar a little.
+    {!% %} has been switched to {% %}
+    {% %} has been switched to {%= %}
 - Split caching logic out of views\TemplateLoader into an interface
   views\CacheBackend and views\FileCacheBackend.
 - Add template usage profiling to views\.

@@ -42,13 +42,37 @@ function MakeURL($path)
 }
 
 /*!
-  A Template is initialized with a text file (typically HTML) and can render it
-  with data from some model. It has a short macro expansion system, equivalent
-  to PHP short open tags, but usable on all installations. Template caching of
-  the parsed state is available.
+  Template parses a a text file (typically HTML) by expanding a small macro
+  language into "compiled" PHP.
+
+  The opening and close tags are user-customizable but the default is {% %}.
+
+  The open and close tags are translated to '<?php' and '?>', respectively.
+
+  Modifiers may be placed after the open and close tags as shorthand for
+  further shorthand.
+
+    {% expression %}
+        Evaluates a non-printing expression, treating it as pure PHP. This can
+        be used to evaluate conditions:
+            {% if (!$user->user_id): %}<p>Hello, Guest!</p>{% endif %}
+
+    {%= $value %}
+        Prints the value and automatically HTML-escapes it.
+
+    {%= $value | int }
+        Prints $value by coerceing it to an integer. Other coercion types
+        are str (the default if no pipe symbol, above), int, float, and
+        raw (no escaping).
 */
 class Template
 {
+  /*! @var string The macro opening delimiter. */
+  static protected $open_tag = '{%';
+
+  /*! @var string The macro closing delimiter. */
+  static protected $close_tag = '%}';
+
   /*! @var string The name of the template. */
   protected $template_name = '';
 
@@ -79,6 +103,16 @@ class Template
     $template = new Template($name);
     $template->data = $data;
     return $template;
+  }
+
+  /*!
+    Sets the open and closing delimiters. The caller is responsible for choosing
+    values that will not cause the parser to barf.
+  */
+  static public function set_open_close_tags($open_tag, $close_tag)
+  {
+    self::$open_tag = $open_tag;
+    self::$close_tag = $close_tag;
   }
 
   /*! Gets the name of the template. */
@@ -128,18 +162,6 @@ class Template
     This performs the macro expansion. The language is very simple and is merely
     shorthand for the PHP tags.
 
-    The most common thing needed in templates is string escaped output from an
-    expression. HTML entities are automatically escaped in this format:
-      <p>Hello, {% $user->name %}!</p>
-
-    To specify the type to format, you use the pipe symbol and then one of the
-    following types: str (default; above), int, float, raw.
-      <p>Hello, {% %user->name | str %}</p>
-      <p>Hello, user #{% $user->user_id | int %}</p>
-
-    To evaluate a non-printing expression, simply add a '!' before the first '%':
-      {!% if (!$user->user_id): %}<p>Hello, Guest!</p>{!% endif %}
-
     @param string Raw template data
     @return string Executable PHP
   */
@@ -151,13 +173,14 @@ class Template
     // If processing a macro, this contains the contents of the macro while
     // it is being extracted from the template.
     $macro = '';
-    $in_macro = FALSE;
-
     $length = strlen($data);
     $i = 0;  // The current position of the iterator.
     $looking_for_end = FALSE;  // Whehter or not an end tag is expected.
     $line_number = 1;  // The current line number.
     $i_last_line = 0;  // The value of |i| at the previous new line, used for column numbering.
+
+    $open_tag_len = strlen(self::$open_tag);
+    $close_tag_len = strlen(self::$close_tag);
 
     while ($i < $length) {
       // See how far the current position is from the end of the string.
@@ -169,8 +192,9 @@ class Template
         $i_last_line = $i;
       }
 
-      // Check for simple PHP short-tag expansion.
-      if ($delta >= 3 && substr($data, $i, 3) == '{!%') {
+      // Check for the open tag.
+      if ($delta >= $open_tag_len &&
+          substr($data, $i, $open_tag_len) == self::$open_tag) {
         // If an expansion has already been opened, then it's an error to nest.
         if ($looking_for_end) {
           $column = $i - $i_last_line;
@@ -178,51 +202,29 @@ class Template
         }
 
         $looking_for_end = TRUE;
-        $processed .= '<' . '?php';
-        $i += 3;
+        $macro = '';
+        $i += $open_tag_len;
         continue;
       }
-      // Check for either the end tag or the start of a macro expansion.
-      else if ($delta >= 2) {
-        $substr = substr($data, $i, 2);
-        // Check for an end tag.
-        if ($substr == '%}') {
-          // If an end tag was encountered without an open tag, that's an error.
-          if (!$looking_for_end) {
-            $column = $i - $i_last_line;
-            throw new TemplateException("Unexpected end of expansion at line $line_number:$column");
-          }
-
-          // If this is a macro, it's time to process it.
-          if ($in_macro)
-            $processed .= $this->_ProcessMacro($macro);
-
-          $looking_for_end = FALSE;
-          $in_macro = FALSE;
-          $processed .= ' ?>';
-          $i += 2;
-          continue;
+      // Check for the close tag.
+      else if ($delta >= $close_tag_len &&
+               substr($data, $i, $close_tag_len) == self::$close_tag) {
+        // If an end tag was encountered without an open tag, that's an error.
+        if (!$looking_for_end) {
+          $column = $i - $i_last_line;
+          throw new TemplateException("Unexpected end of expansion at line $line_number:$column");
         }
-        // Check for the beginning of a macro.
-        else if ($substr == '{%') {
-          // If an expansion has already been opened, then it's an error to nest.
-          if ($looking_for_end) {
-            $column = $i - $i_last_line;
-            throw new TemplateException("Unexpected start of expansion at line $line_number:$column");
-          }
 
-          $processed .= '<' . '?php echo ';
-          $macro = '';
-          $in_macro = TRUE;
-          $looking_for_end = TRUE;
-          $i += 2;
-          continue;
-        }
+        $expanded_macro = $this->_ProcessMacro($macro);
+        $processed .= "<?php $expanded_macro ?>";
+        $looking_for_end = FALSE;
+        $i += $close_tag_len;
+        continue;
       }
 
       // All other characters go into a storage bin. If currently in a macro,
       // save off the data separately for parsing.
-      if ($in_macro)
+      if ($looking_for_end)
         $macro .= $data[$i];
       else
         $processed .= $data[$i];
@@ -233,18 +235,34 @@ class Template
   }
 
   /*!
-    Takes the contents of a macro |{% $some_var | int %}|, which is the part in
-    between the open and close brackets (excluding '%') and transforms it into a
-    PHP statement.
+    Takes the contents of a macro, i.e. the string between the open and close
+    tags, and transforms it into a PHP statement.
   */
   protected function _ProcessMacro($macro)
+  {
+    if (strlen($macro) < 1)
+      return $macro;
+
+    // If the macro has a modifier character, as described in the class comment,
+    // futher thransform the statement.
+    switch ($macro[0]) {
+      case '=': return $this->_ProcessInterpolation(substr($macro, 1));
+      default:  return $macro;
+    }
+  }
+
+  /*!
+    Creates a printing expression for a value, optionally coercing and escaping
+    it to a specific type.
+  */
+  protected function _ProcessInterpolation($macro)
   {
     // The pipe operator specifies how to sanitize the output.
     $formatter_pos = strrpos($macro, '|');
 
     // No specifier defaults to escaped string.
     if ($formatter_pos === FALSE)
-      return 'hoplite\\base\\filter\\String(' . $macro . ')';
+      return 'echo hoplite\\base\\filter\\String(' . $macro . ')';
 
     // Otherwise, apply the right filter.
     $formatter = trim(substr($macro, $formatter_pos + 1));
@@ -260,7 +278,7 @@ class Template
 
     // Now get the expression and return a PHP statement.
     $expression = trim(substr($macro, 0, $formatter_pos));
-    return 'hoplite\\base\\filter\\' . $function . '(' . $expression . ')';
+    return 'echo hoplite\\base\\filter\\' . $function . '(' . $expression . ')';
   }
 }
 
