@@ -1,11 +1,11 @@
 <?php
 // Hoplite
 // Copyright (c) 2011 Blue Static
-// 
+//
 // This program is free software: you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation, either version 3 of the License, or any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful, but WITHOUT
 // ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 // FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
@@ -64,6 +64,17 @@ function MakeURL($path)
         Prints $value by coerceing it to an integer. Other coercion types
         are str (the default if no pipe symbol, above), int, float, and
         raw (no escaping).
+
+    {%# macro_function arg1, arg2, ... argN %}
+        Runs the built-in macro_function with the specified arguments.
+        The built-ins are:
+            * import(template_name:string, new_variables:array)
+                 Imports a subtemplate into the current scope, giving it access
+                 to all the current variables, while overriding and defining
+                 new ones via new_variables.
+            * url(path:string)
+                 Constructs an absolute URL to the given path from the script
+                 root.
 */
 class Template
 {
@@ -134,11 +145,11 @@ class Template
   /*! This includes the template and renders it out. */
   public function Render($vars = array())
   {
-    $_template = $this->data;
-    $_vars = array_merge($this->vars, $vars);
-    $render = function () use ($_template, $_vars) {
-      extract($_vars);
-      eval('?>' . $_template . '<' . '?');
+    $__template_data = $this->data;
+    $__template_vars = array_merge($this->vars, $vars);
+    $render = function () use ($__template_data, $__template_vars) {
+      extract($__template_vars);
+      eval('?>' . $__template_data . '<' . '?');
     };
 
     ob_start();
@@ -247,6 +258,7 @@ class Template
     // futher thransform the statement.
     switch ($macro[0]) {
       case '=': return $this->_ProcessInterpolation(substr($macro, 1));
+      case '#': return $this->_ProcessBuiltin(substr($macro, 1));
       default:  return $macro;
     }
   }
@@ -279,6 +291,47 @@ class Template
     // Now get the expression and return a PHP statement.
     $expression = trim(substr($macro, 0, $formatter_pos));
     return 'echo hoplite\\base\\filter\\' . $function . '(' . $expression . ')';
+  }
+
+  protected function _ProcessBuiltin($macro)
+  {
+    $macro = trim($macro);
+    $function_pos = strpos($macro, ' ');
+    if ($function_pos === FALSE)
+      throw new TemplateException('No macro function specified');
+
+    $function = substr($macro, 0, $function_pos);
+    $args = substr($macro, $function_pos);
+    switch ($function) {
+      case 'url':    return $this->_Builtin_url($args);
+      case 'import': return $this->_Builtin_import($args);
+      default:
+        throw new TemplateException("Invalid macro function '$function'");
+    }
+  }
+
+  protected function _Builtin_url($args)
+  {
+    return "echo hoplite\\views\\MakeURL($args)";
+  }
+
+  protected function _Builtin_import($args)
+  {
+    $template = $args;
+    $vars = '';
+
+    $template_pos = strpos($args, ',');
+    if ($template_pos !== FALSE) {
+      $template = substr($args, 0, $template_pos);
+      $vars = substr($args, $template_pos + 1);
+    }
+
+    if ($vars)
+      $vars = "array_merge(\$__template_vars, $vars)";
+    else
+      $vars = '$__template_vars';
+
+    return "hoplite\\views\\Inject($template, $vars)";
   }
 }
 
