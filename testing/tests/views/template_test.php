@@ -1,11 +1,11 @@
 <?php
 // Hoplite
 // Copyright (c) 2011 Blue Static
-// 
+//
 // This program is free software: you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation, either version 3 of the License, or any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful, but WITHOUT
 // ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 // FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
@@ -105,5 +105,27 @@ class TemplateTest extends \PHPUnit_Framework_TestCase
     $this->assertEquals('Some thing', $template->Render(array('v' => 'thing')));
 
     $this->assertEquals('Some other', $template->Render());
+  }
+
+  public function testBuiltinUrl()
+  {
+    $template = Template::NewWithData('builtin', 'Make a URL {%#url "/foo/bar"%}');
+    $this->assertEquals('Make a URL <?php hoplite\\views\\TemplateBuiltins::MakeURL("/foo/bar") ?>', $template->template());
+
+    $template = Template::NewWithData('builtin', 'Another {%#   url "/foo"   %} URL');
+    $this->assertEquals('Another <?php hoplite\\views\\TemplateBuiltins::MakeURL("/foo") ?> URL', $template->template());
+  }
+
+  public function testBuiltinImport()
+  {
+    $template = Template::NewWithData('test', 'Import {%# import \'_template\' %} tpl');
+    $this->assertEquals(
+        'Import <?php hoplite\\views\\TemplateBuiltins::Import(\'_template\', $__template_vars) ?> tpl',
+        $template->template());
+
+    $template = Template::NewWithData('test', 'Import {%#import "tpl", array("foo" => "bar")%} import');
+    $this->assertEquals(
+        'Import <?php hoplite\\views\\TemplateBuiltins::Import("tpl", array_merge($__template_vars,  array("foo" => "bar"))) ?> import',
+        $template->template());
   }
 }

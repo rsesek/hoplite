@@ -22,26 +22,6 @@ require_once HOPLITE_ROOT . '/base/filter.php';
 require_once HOPLITE_ROOT . '/base/profiling.php';
 
 /*!
-  Renders a template with additional vars.
-  @param string The template name to render
-  @param array Variables with which to render.
-*/
-function Inject($name, $vars = array())
-{
-  echo TemplateLoader::Fetch($name)->Render($vars);
-}
-
-/*! @brief Creates a URL via RootController::MakeURL().
-  This requires the root controller be set in the $GLOBALS as
-  hoplite\http\RootController.
-  @param string Path.
-*/
-function MakeURL($path)
-{
-  return $GLOBALS['hoplite\http\RootController']->MakeURL($path, FALSE);
-}
-
-/*!
   Template parses a a text file (typically HTML) by expanding a small macro
   language into "compiled" PHP.
 
@@ -301,7 +281,7 @@ class Template
       throw new TemplateException('No macro function specified');
 
     $function = substr($macro, 0, $function_pos);
-    $args = substr($macro, $function_pos);
+    $args = substr($macro, $function_pos + 1);
     switch ($function) {
       case 'url':    return $this->_Builtin_url($args);
       case 'import': return $this->_Builtin_import($args);
@@ -312,7 +292,7 @@ class Template
 
   protected function _Builtin_url($args)
   {
-    return "echo hoplite\\views\\MakeURL($args)";
+    return "hoplite\\views\\TemplateBuiltins::MakeURL($args)";
   }
 
   protected function _Builtin_import($args)
@@ -331,7 +311,33 @@ class Template
     else
       $vars = '$__template_vars';
 
-    return "hoplite\\views\\Inject($template, $vars)";
+    return "hoplite\\views\\TemplateBuiltins::Import($template, $vars)";
+  }
+}
+
+/*!
+  Namespace for builtin template macros.
+*/
+class TemplateBuiltins
+{
+  /*!
+    Renders a template with additional vars.
+    @param string The template name to render
+    @param array Variables with which to render.
+  */
+  static public function Import($template, $vars)
+  {
+    echo TemplateLoader::Fetch($template)->Render($vars);
+  }
+
+  /*! @brief Creates a URL via RootController::MakeURL().
+    This requires the root controller be set in the $GLOBALS as
+    hoplite\http\RootController.
+    @param string Path.
+  */
+  static public function MakeURL($path)
+  {
+    echo $GLOBALS['hoplite\http\RootController']->MakeURL($path, FALSE);
   }
 }
 
